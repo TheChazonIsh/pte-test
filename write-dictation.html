@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Write from Dictation with Multi-Accent &amp; Speed Control</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #0891b2; font-weight: 700; font-size: 14px; }
+    .badge { background: #ecfeff; color: #0891b2; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .pte-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 760px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-top: 6px solid #0891b2;
+    }
+    .pte-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .pte-header h2 { font-size: 20px; color: #0f172a; }
+    .pte-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .question-select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    .audio-settings-bar {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .setting-group { display: flex; align-items: center; gap: 8px; }
+    .setting-label { font-size: 12px; font-weight: 700; color: #475569; }
+    .pill-group { display: flex; gap: 4px; }
+    .btn-pill {
+      border: 1px solid #cbd5e1;
+      background: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .btn-pill.active {
+      background: #0891b2;
+      color: white;
+      border-color: #0891b2;
+    }
+
+    .audio-box {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .audio-anim { font-size: 32px; margin-bottom: 6px; }
+    .audio-desc { font-size: 15px; font-weight: 600; color: #475569; }
+
+    .status-panel {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .status-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 14px;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 12px;
+      background-color: #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .progress-bar { width: 0%; height: 100%; background-color: #0891b2; transition: width 1s linear; }
+
+    .input-box {
+      width: 100%;
+      height: 120px;
+      padding: 16px;
+      font-size: 17px;
+      line-height: 1.6;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: inherit;
+      color: #1e293b;
+      margin-bottom: 20px;
+      resize: none;
+    }
+    .input-box:focus { outline: none; border-color: #0891b2; }
+
+    .btn-group { display: flex; gap: 12px; }
+    .btn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-start { background-color: #0891b2; color: white; }
+    .btn-start:hover { background-color: #0e7490; }
+    .btn-submit { background-color: #10b981; color: white; }
+    .btn-submit:hover { background-color: #059669; }
+
+    .score-card {
+      display: none;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #cffafe;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(8, 145, 178, 0.08);
+    }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ecfeff;
+      padding-bottom: 12px;
+    }
+    .score-header h3 { font-size: 17px; color: #0891b2; }
+    .overall-badge { font-size: 24px; font-weight: 800; color: #0891b2; }
+
+    .diff-display {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .w-matched { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+    .w-missed { background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; text-decoration: line-through; }
+
+    .analysis-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Write from Dictation &bull; Multi-Accent &amp; Speed</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="pte-container">
+      <div class="pte-header">
+        <div>
+          <h2>Write from Dictation</h2>
+          <p>문장을 잘 듣고 철자와 대소문자에 유의하여 받아 적으세요.</p>
+        </div>
+        <select id="wfd-selector" class="question-select">
+          <option value="0">문장 1 (도서관 정기 유지보수)</option>
+          <option value="1">문장 2 (과제 금요일 마감)</option>
+          <option value="2">문장 3 (시험 기간 시설 개방)</option>
+        </select>
+      </div>
+
+      <div class="audio-settings-bar">
+        <div class="setting-group">
+          <span class="setting-label">원어민 억양:</span>
+          <div class="pill-group" id="accent-pills">
+            <button class="btn-pill" data-accent="en-US">🇺🇸 US</button>
+            <button class="btn-pill" data-accent="en-GB">🇬🇧 UK</button>
+            <button class="btn-pill" data-accent="en-AU">🇦🇺 AU</button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <span class="setting-label">재생 속도:</span>
+          <div class="pill-group" id="speed-pills">
+            <button class="btn-pill" data-speed="0.8">0.8x (Slow)</button>
+            <button class="btn-pill active" data-speed="1.0">1.0x (Normal)</button>
+            <button class="btn-pill" data-speed="1.2">1.2x (Fast)</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
+        <button type="button" id="btn-wfd-hint" style="font-size: 12px; font-weight: 700; color: #0e7490; background: #cffafe; border: 1px solid #67e8f9; padding: 5px 12px; border-radius: 6px; cursor: pointer;">💡 첫 글자 이니셜 힌트 보기</button>
+      </div>
+      <div id="wfd-hint-display" style="display: none; background: #ecfeff; border: 1px dashed #22d3ee; border-radius: 8px; padding: 12px 16px; font-size: 16px; font-weight: 600; color: #155e75; margin-bottom: 14px; letter-spacing: 1px;"></div>
+      <div class="audio-box" id="audio-box">
+        <div class="audio-anim" id="audio-icon">🎧</div>
+        <div class="audio-desc" id="audio-desc">[시험 시작]을 누르면 7초 카운트다운 후 문장이 재생됩니다.</div>
+      </div>
+
+      <div class="status-panel">
+        <div class="status-title">
+          <span id="status-label">상태: 대기 중</span>
+          <span id="timer-label">00s</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <textarea id="answer-input" class="input-box" placeholder="여기에 들은 문장을 타이핑하세요..." disabled></textarea>
+
+      <div class="btn-group">
+        <button class="btn btn-start" id="start-btn">시험 시작 (문장 듣기)</button>
+        <button class="btn btn-submit" id="submit-btn" style="display: none;">제출 및 철자 채점</button>
+      </div>
+
+      <div class="score-card" id="score-card">
+        <div class="score-header">
+          <h3>📊 Write from Dictation 채점 리포트</h3>
+          <div class="overall-badge" id="overall-badge">-- / 90</div>
+        </div>
+        <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px;">정답 대조 결과:</div>
+        <div class="diff-display" id="diff-box"></div>
+        <div class="analysis-details" id="analysis-details"></div>
+        <div style="margin-top: 14px; text-align: center;">
+          <button type="button" class="btn btn-outline" style="font-size: 13px; padding: 8px 16px; border: 1px solid #a5f3fc; background: #ecfeff; color: #0891b2;" onclick="PTE_AUDIO.speak(WFD_SENTENCES[wfdSelector.value])">🔊 원어민 표준 발음 다시 듣기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio-engine.js"></script>
+  <script src="questions.js"></script>
+  <script>
+    const WFD_ITEMS = PTE_QUESTION_BANK.getAll('wfd');
+    const WFD_SENTENCES = WFD_ITEMS.map(q => q.text);
+    let timerInterval = null;
+    let playbackSpeed = 1.0;
+
+    const wfdSelector = document.getElementById('wfd-selector');
+    const audioIcon = document.getElementById('audio-icon');
+    const audioDesc = document.getElementById('audio-desc');
+    const statusLabel = document.getElementById('status-label');
+    const timerLabel = document.getElementById('timer-label');
+    const progressBar = document.getElementById('progress-bar');
+    const answerInput = document.getElementById('answer-input');
+    const startBtn = document.getElementById('start-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const scoreCard = document.getElementById('score-card');
+    const diffBox = document.getElementById('diff-box');
+    const analysisDetails = document.getElementById('analysis-details');
+
+    document.querySelectorAll('#accent-pills .btn-pill').forEach(btn => {
+      if (btn.dataset.accent === PTE_AUDIO.currentAccent) btn.classList.add('active');
+      else btn.classList.remove('active');
+      btn.onclick = (e) => {
+        document.querySelectorAll('#accent-pills .btn-pill').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        PTE_AUDIO.setAccent(e.target.dataset.accent);
+      };
+    });
+
+    document.querySelectorAll('#speed-pills .btn-pill').forEach(btn => {
+      btn.onclick = (e) => {
+        document.querySelectorAll('#speed-pills .btn-pill').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        playbackSpeed = parseFloat(e.target.dataset.speed);
+      };
+    });
+
+    const qBar = initDynamicQuestionBar('wfd', wfdSelector, () => {
+      resetTest();
+    });
+
+    function resetTest() {
+      clearInterval(timerInterval);
+      window.speechSynthesis.cancel();
+      audioIcon.innerText = "🎧";
+      audioDesc.innerText = "[시험 시작]을 누르면 7초 카운트다운 후 문장이 재생됩니다.";
+      statusLabel.innerText = "상태: 대기 중";
+      timerLabel.innerText = "00s";
+      progressBar.style.width = "0%";
+      answerInput.value = "";
+      answerInput.disabled = true;
+      startBtn.style.display = "inline-block";
+      startBtn.disabled = false;
+      submitBtn.style.display = "none";
+      scoreCard.style.display = "none";
+    }
+
+    startBtn.addEventListener('click', () => {
+      startBtn.disabled = true;
+      answerInput.disabled = false;
+      scoreCard.style.display = "none";
+
+      let countdown = 7;
+      audioIcon.innerText = "⏳";
+      audioDesc.innerText = `문장 재생 준비 중... (${countdown}초 뒤 시작)`;
+      statusLabel.innerText = "상태: 오디오 준비 (Beginning in...)";
+      timerLabel.innerText = `${countdown}s`;
+
+      timerInterval = setInterval(() => {
+        countdown--;
+        timerLabel.innerText = `${countdown}s`;
+        progressBar.style.width = `${((7 - countdown) / 7) * 100}%`;
+        if (countdown <= 0) {
+          clearInterval(timerInterval);
+          playSentence();
+        }
+      }, 1000);
+    });
+
+    function playSentence() {
+      const sentence = WFD_SENTENCES[wfdSelector.value];
+      const accentLabel = PTE_AUDIO.accents[PTE_AUDIO.currentAccent].label;
+
+      audioIcon.innerText = "🔊";
+      audioDesc.innerText = `${accentLabel} 억양 청취 중... (${playbackSpeed}x 속도)`;
+      statusLabel.innerText = "상태: 음성 재생 중 (Playing...)";
+      timerLabel.innerText = "Playing...";
+      progressBar.style.width = "100%";
+      progressBar.style.backgroundColor = "#0891b2";
+
+      PTE_AUDIO.speak(sentence, () => {
+        audioIcon.innerText = "✍️";
+        audioDesc.innerText = "음성이 끝났습니다. 기억한 문장을 타이핑하고 제출하세요.";
+        statusLabel.innerText = "상태: 타이핑 입력 중 (Inputting...)";
+        timerLabel.innerText = "작성 중";
+        startBtn.style.display = "none";
+        submitBtn.style.display = "inline-block";
+        answerInput.focus();
+      }, playbackSpeed);
+    }
+
+    submitBtn.addEventListener('click', evaluateDictation);
+
+    function cleanWord(w) {
+      return w.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim();
+    }
+
+    function evaluateDictation() {
+      answerInput.disabled = true;
+      submitBtn.style.display = "none";
+      startBtn.style.display = "inline-block";
+      startBtn.innerText = "다시 응시하기";
+      startBtn.disabled = false;
+      statusLabel.innerText = "상태: 채점 완료";
+
+      const targetSentence = WFD_SENTENCES[wfdSelector.value];
+      const targetWords = targetSentence.split(/\s+/);
+      const userText = answerInput.value.trim();
+      const userWords = userText ? userText.split(/\s+/) : [];
+
+      let matchedCount = 0;
+      const userPool = userWords.map(w => cleanWord(w).toLowerCase());
+
+      const diffHtml = targetWords.map(tWord => {
+        const cleanT = cleanWord(tWord).toLowerCase();
+        const foundIdx = userPool.indexOf(cleanT);
+        if (foundIdx !== -1) {
+          matchedCount++;
+          userPool.splice(foundIdx, 1);
+          return `<span class="w-matched">${tWord}</span>`;
+        } else {
+          saveMistake(cleanT, 'WFD', targetSentence);
+          return `<span class="w-missed">${tWord}</span>`;
+        }
+      }).join(" ");
+
+      const matchRatio = targetWords.length > 0 ? (matchedCount / targetWords.length) : 0;
+      const overall = Math.round(10 + matchRatio * 80);
+
+      diffBox.innerHTML = diffHtml;
+      document.getElementById('overall-badge').innerText = `${overall} / 90`;
+
+      analysisDetails.innerHTML = `
+        <b>단어 적중 점수:</b> ${matchedCount} / ${targetWords.length}점 (${Math.round(matchRatio * 100)}%)<br>
+        <b>설정 억양 및 속도:</b> ${PTE_AUDIO.accents[PTE_AUDIO.currentAccent].label} &bull; ${playbackSpeed}x 배속<br>
+        <b>내가 입력한 문장:</b> "${userText || '(입력 내용 없음)'}"<br>
+        <b>원문 정답:</b> "${targetSentence}"
+      `;
+
+      scoreCard.style.display = "block";
+      setTimeout(() => qBar.refreshOptions(), 100);
+
+      const curItem = WFD_ITEMS[wfdSelector.value] || {};
+      savePteResult({
+        questionId: curItem.id,
+        type: 'WFD',
+        title: targetSentence.substring(0, 25) + '...',
+        overall: overall,
+        content: overall,
+        fluency: 90,
+        pron: 90,
+        wpm: 0
+      });
+    }
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Question Bank Manager (나만의 기출문제 추가)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #2563eb; font-weight: 700; font-size: 14px; }
+    .badge { background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .container { max-width: 900px; margin: 32px auto; padding: 0 20px; flex: 1; width: 100%; }
+    .header-box { margin-bottom: 24px; }
+    .header-box h1 { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+    .header-box p { font-size: 14px; color: #64748b; }
+
+    .count-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .count-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .count-card .lbl { font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+    .count-card .val { font-size: 20px; font-weight: 800; color: #1e3a8a; }
+
+    .form-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .form-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 14px; color: #0f172a; }
+    .form-row { margin-bottom: 16px; }
+    .form-row label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+    .select-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+    .bulk-textarea {
+      width: 100%;
+      height: 180px;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.6;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .hint-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+    .custom-list-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+    .custom-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+    .btn-del {
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      color: #dc2626;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Question Bank CMS v4.0</span>
+  </div>
+
+  <div class="container">
+    <div class="header-box">
+      <h1>➕ 나만의 PTE 기출문제 직접 추가 &amp; 관리</h1>
+      <p>코드를 수정할 필요 없이 영어 문장이나 지문을 복사·붙여넣기만 하면 문제 은행에 즉시 등록됩니다.</p>
+    </div>
+
+    <div class="count-grid" id="count-grid"></div>
+
+    <div class="form-card">
+      <h2>📝 문장 / 지문 일괄 복사·붙여넣기 등록</h2>
+      <div class="form-row">
+        <label>추가할 시험 유형 선택</label>
+        <select id="type-select" class="select-input">
+          <option value="rs">Speaking - Repeat Sentence (듣고 따라 말하기 문장)</option>
+          <option value="wfd">Listening - Write from Dictation (받아쓰기 문장)</option>
+          <option value="ra">Speaking - Read Aloud (낭독용 단락 지문)</option>
+          <option value="we">Writing - Write Essay (에세이 주제 프롬프트)</option>
+        </select>
+      </div>
+
+      <div class="hint-box" id="type-hint">
+        💡 <b>일괄 등록 팁:</b> 여러 개의 문장을 <b>줄바꿈(Enter)</b>으로 구분하여 한 번에 붙여넣으세요! 10줄을 붙여넣으면 10개의 문제가 한 번에 추가됩니다.
+      </div>
+
+      <div class="form-row">
+        <label>영어 문장 또는 지문 입력 (한 줄에 1문제씩 자동 인식)</label>
+        <textarea id="bulk-input" class="bulk-textarea" placeholder="예시:
+The university library will expand its digital archive next semester.
+Students must wear safety equipment inside the engineering workshop.
+All applications for financial aid should be submitted before Friday."></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="btn-add-bulk">선택한 유형에 일괄 등록하기</button>
+    </div>
+
+    <div class="custom-list-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="font-size: 17px; font-weight: 800;">내가 직접 추가한 커스텀 문제 목록</h2>
+        <button class="btn btn-danger" id="btn-clear-custom" style="padding: 6px 12px; font-size: 12px;">내가 추가한 문제 전체 삭제</button>
+      </div>
+      <div id="custom-list"></div>
+    </div>
+  </div>
+
+  <script src="questions.js"></script>
+  <script>
+    function renderManager() {
+      const types = [
+        { key: 'ra', name: 'Read Aloud' },
+        { key: 'rs', name: 'Repeat Sentence' },
+        { key: 'di', name: 'Describe Image' },
+        { key: 'we', name: 'Write Essay' },
+        { key: 'fib', name: 'Reading FIB' },
+        { key: 'wfd', name: 'Dictation (WFD)' },
+        { key: 'rop', name: 'Re-order (ROP)' },
+        { key: 'sst', name: 'Summary (SST)' },
+        { key: 'hiw', name: 'Incorrect (HIW)' },
+        { key: 'rl', name: 'Retell (RL)' }
+      ];
+
+      let totalAll = 0;
+      document.getElementById('count-grid').innerHTML = types.map(t => {
+        const count = PTE_QUESTION_BANK.getAll(t.key).length;
+        totalAll += count;
+        return `
+          <div class="count-card">
+            <div class="lbl">${t.name}</div>
+            <div class="val">${count}문제</div>
+          </div>
+        `;
+      }).join('');
+
+      const customBank = PTE_QUESTION_BANK.getCustomBank();
+      const allCustom = [];
+      Object.keys(customBank).forEach(k => {
+        (customBank[k] || []).forEach(item => {
+          allCustom.push({ type: k.toUpperCase(), ...item });
+        });
+      });
+
+      const listEl = document.getElementById('custom-list');
+      if (allCustom.length === 0) {
+        listEl.innerHTML = `<p style="color: #94a3b8; font-size: 14px; padding: 20px 0; text-align: center;">아직 직접 추가한 문제가 없습니다. 기본 내장된 <b>${totalAll}개 실전 문제</b>가 활성화되어 있습니다.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = allCustom.map(item => `
+        <div class="custom-item">
+          <div>
+            <b style="color: #2563eb; margin-right: 8px;">[${item.type}]</b>
+            <span>${item.text || item.prompt || item.title}</span>
+          </div>
+          <button class="btn-del" onclick="deleteCustom('${item.type.toLowerCase()}', '${item.id}')">삭제</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('btn-add-bulk').addEventListener('click', () => {
+      const type = document.getElementById('type-select').value;
+      const raw = document.getElementById('bulk-input').value.trim();
+      if (!raw) {
+        alert('추가할 영어 문장이나 지문을 입력해 주세요!');
+        return;
+      }
+
+      const lines = raw.split(/\n+/).map(l => l.trim()).filter(l => l.length > 5);
+      if (lines.length === 0) {
+        alert('유효한 문장이 없습니다.');
+        return;
+      }
+
+      const customBank = PTE_QUESTION_BANK.getCustomBank();
+      if (!customBank[type]) customBank[type] = [];
+
+      lines.forEach((line, i) => {
+        const newId = `CUSTOM-${type.toUpperCase()}-${Date.now()}-${i}`;
+        if (type === 'we') {
+          customBank[type].push({
+            id: newId,
+            title: line.substring(0, 24) + '...',
+            prompt: line
+          });
+        } else {
+          customBank[type].push({
+            id: newId,
+            title: line.substring(0, 24) + '...',
+            text: line
+          });
+        }
+      });
+
+      localStorage.setItem('pte_custom_questions', JSON.stringify(customBank));
+      document.getElementById('bulk-input').value = '';
+      alert(`총 ${lines.length}개의 새 문제가 [${type.toUpperCase()}] 문제 은행에 추가되었습니다!`);
+      renderManager();
+    });
+
+    function deleteCustom(type, id) {
+      const customBank = PTE_QUESTION_BANK.getCustomBank();
+      if (customBank[type]) {
+        customBank[type] = customBank[type].filter(item => item.id !== id);
+        localStorage.setItem('pte_custom_questions', JSON.stringify(customBank));
+        renderManager();
+      }
+    }
+
+    document.getElementById('btn-clear-custom').addEventListener('click', () => {
+      if (confirm('직접 추가한 커스텀 문제를 모두 삭제하시겠습니까? (기본 내장 345문제는 유지됩니다)')) {
+        localStorage.removeItem('pte_custom_questions');
+        renderManager();
+      }
+    });
+
+    renderManager();
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

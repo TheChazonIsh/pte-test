@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Master Real Exam Cheatsheet &amp; Templates</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #4338ca; font-weight: 700; font-size: 14px; }
+    .badge { background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .container { max-width: 860px; margin: 32px auto; padding: 0 20px; flex: 1; width: 100%; }
+    .header-area { margin-bottom: 28px; }
+    .header-area h1 { font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+    .header-area p { font-size: 14px; color: #64748b; }
+
+    .cheat-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .cheat-card h2 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 10px;
+    }
+    .tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+    .tip-list { list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.6; }
+    .tip-list li { display: flex; gap: 8px; }
+    .tip-list li::before { content: "✔"; color: #10b981; font-weight: bold; }
+
+    .template-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #334155;
+      margin-top: 12px;
+      position: relative;
+    }
+    .btn-copy {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: white;
+      border: 1px solid #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-copy:hover { background: #f1f5f9; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Official Exam Cheatsheet</span>
+  </div>
+
+  <div class="container">
+    <div class="header-area">
+      <h1>💡 PTE 실전 영역별 공략 치트시트</h1>
+      <p>피어슨 컴퓨터 채점 알고리즘의 핵심 기준과 고득점 만능 템플릿을 정리한 가이드입니다.</p>
+    </div>
+
+    <div class="cheat-card">
+      <h2><span class="tag" style="background: #eff6ff; color: #1d4ed8;">RA</span> Read Aloud 실전 전략</h2>
+      <ul class="tip-list">
+        <li><b>3초 무음 주의:</b> 마이크가 켜지고 3초간 소리가 없으면 자동으로 녹음이 종료됩니다. 비프음 후 즉시 발화를 시작하세요.</li>
+        <li><b>발음보다 유창성이 우선:</b> 모르는 단어가 나와도 멈추거나 더듬지 말고 자연스러운 억양으로 흘려 넘기는 것이 고득점의 핵심입니다.</li>
+        <li><b>구두점(쉼표, 마침표)에서만 짧게 멈춤:</b> 문장 중간에서 멈추면 Pause 감점으로 Fluency 점수가 급락합니다.</li>
+      </ul>
+    </div>
+
+    <div class="cheat-card">
+      <h2><span class="tag" style="background: #faf5ff; color: #6b21a8;">DI</span> Describe Image 79+ 만능 템플릿</h2>
+      <ul class="tip-list">
+        <li>도표의 종류(막대/원형/지도/사진)에 상관없이 아래 4단계 구조를 35초간 쉬지 않고 말하면 만점입니다.</li>
+      </ul>
+      <div class="template-box" id="di-template">
+        <button class="btn-copy" onclick="copyText('di-template')">템플릿 복사</button>
+        1. [도입] The given image provides informative data about <b>[제목/주제]</b>.<br>
+        2. [최댓값] According to the chart, the highest figure can be observed in <b>[최댓값 항목]</b>.<br>
+        3. [최솟값] Conversely, the lowest figure is shown in <b>[최솟값 항목]</b>.<br>
+        4. [결론] In conclusion, it can be clearly seen that <b>[전체적인 핵심 추세]</b>.
+      </div>
+    </div>
+
+    <div class="cheat-card">
+      <h2><span class="tag" style="background: #fff7ed; color: #ea580c;">WE</span> Write Essay 4단락 표준 프레임</h2>
+      <ul class="tip-list">
+        <li><b>분량 세이프티 존:</b> 반드시 <b>220~260단어</b> 사이로 작성하세요. (200단어 미만이나 300단어 초과 시 Form 점수 감점).</li>
+        <li>서론(35단어) - 본론1(75단어) - 본론2(75단어) - 결론(45단어) 4단락 구조를 지키면 Structure 만점입니다.</li>
+      </ul>
+    </div>
+
+    <div class="cheat-card">
+      <h2><span class="tag" style="background: #ecfeff; color: #0891b2;">WFD</span> Write from Dictation 방어 전략</h2>
+      <ul class="tip-list">
+        <li><b>단수/복수 방어법:</b> 단수인지 복수인지 헷갈릴 때는 둘 다 작성(예: <i>assignment assignments</i>)해도 맞는 단어가 감지되면 점수를 획득합니다.</li>
+        <li><b>약어 메모법:</b> 들리는 즉시 단어의 첫 2~3글자만 종이에 적고(예: <i>lib wil be clo...</i>), 오디오가 끝난 뒤 온전한 단어로 복원하세요.</li>
+      </ul>
+    </div>
+
+    <!-- 5. Reading ROP 공략 -->
+    <div class="cheat-card">
+      <h2><span class="tag" style="background: #ccfbf1; color: #0f766e;">ROP</span> Re-order Paragraphs 인접 쌍(Pair) 공략법</h2>
+      <ul class="tip-list">
+        <li><b>독립적인 첫 문장(Topic Sentence) 찾기:</b> 대명사(he, she, they, it), 지시어(this, these), 역접 접속사(however, therefore)로 시작하지 않는 완전하고 자립적인 문장을 무조건 1번으로 배치하세요.</li>
+        <li><b>피어슨 공식 쌍(Pair) 채점 원리:</b> 전체 순서가 하나 틀려도 인접한 두 문단의 순서(예: B-A, A-C)만 맞으면 부분 점수를 획득합니다. 문단과 문단 사이의 '지시어 고리(This process, These gases)'를 연결하세요.</li>
+        <li><b>시간 순서 및 원인-결과 파악:</b> 과거 연도/과거 시제(Before the 15th century)가 먼저 나오고, 현대/현재 시제(Today, Nowadays)가 뒤에 배치됩니다.</li>
+      </ul>
+    </div>
+
+    <!-- 6. Listening SST 공략 -->
+    <div class="cheat-card">
+      <h2><span class="tag" style="background: #e0e7ff; color: #4338ca;">SST</span> Summarize Spoken Text 50~70단어 만능 템플릿</h2>
+      <ul class="tip-list">
+        <li><b>분량 엄수:</b> 무조건 50단어 이상, 70단어 이하로 작성하세요. (49단어 이하이거나 71단어 초과 시 1점 감점, 100단어 초과 시 0점 처리).</li>
+        <li>아래 템플릿 빈칸에 강의에서 메모한 핵심 명사구 4~5개만 채워 넣으면 문법과 어휘 만점을 받습니다.</li>
+      </ul>
+      <div class="template-box" id="sst-template">
+        <button class="btn-copy" onclick="copyText('sst-template')">템플릿 복사</button>
+        The lecture mainly discussed <b>[핵심 주제]</b>. The speaker stated that <b>[핵심 포인트 1]</b>. Furthermore, he emphasized that <b>[핵심 포인트 2]</b>, which significantly affects <b>[핵심 포인트 3]</b>. In conclusion, the presentation provided valuable insights into <b>[전체 요약]</b>.
+      </div>
+    </div>
+
+    <!-- 7. Speaking RL 만능 템플릿 -->
+    <div class="cheat-card">
+      <h2><span class="tag" style="background: #fce7f3; color: #be185d;">RL</span> Retell Lecture 79+ 스피킹 만능 프레임</h2>
+      <ul class="tip-list">
+        <li>강의를 다 알아듣지 못했더라도 메모한 명사 키워드 4개만 아래 구조에 넣어 35초간 끊김 없이 말하면 유창성 만점입니다.</li>
+      </ul>
+      <div class="template-box" id="rl-template">
+        <button class="btn-copy" onclick="copyText('rl-template')">템플릿 복사</button>
+        1. The speaker provided an informative analysis about <b>[강의 주제]</b>.<br>
+        2. Firstly, he discussed the importance of <b>[메모한 키워드 1]</b>.<br>
+        3. Secondly, he emphasized the significant impact of <b>[메모한 키워드 2]</b>.<br>
+        4. Overall, the lecture clearly illustrated key concepts regarding <b>[메모한 키워드 3]</b>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function copyText(id) {
+      const text = document.getElementById(id).innerText.replace('템플릿 복사', '').trim();
+      navigator.clipboard.writeText(text);
+      alert('템플릿이 클립보드에 복사되었습니다!');
+    }
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

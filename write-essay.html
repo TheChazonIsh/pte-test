@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Write Essay Simulator with AI Form Evaluation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #ea580c; font-weight: 700; font-size: 14px; }
+    .badge { background: #fff7ed; color: #ea580c; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .pte-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 820px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-top: 6px solid #ea580c;
+    }
+    .pte-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .pte-header h2 { font-size: 20px; color: #0f172a; }
+    .pte-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .question-select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    .prompt-box {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-left: 4px solid #f59e0b;
+      border-radius: 6px;
+      padding: 18px;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #78350f;
+      margin-bottom: 20px;
+      user-select: none;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 16px;
+    }
+    .btn-tool {
+      background: white;
+      border: 1px solid #cbd5e1;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-tool:hover { background: #f1f5f9; }
+
+    .word-counter-badge {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .word-valid { background: #dcfce7; color: #15803d; }
+    .word-invalid { background: #fee2e2; color: #b91c1c; }
+
+    .essay-textarea {
+      width: 100%;
+      height: 280px;
+      padding: 16px;
+      font-size: 16px;
+      line-height: 1.7;
+      border: 1px solid #cbd5e1;
+      border-radius: 0 0 8px 8px;
+      resize: vertical;
+      font-family: inherit;
+      color: #1e293b;
+      margin-bottom: 20px;
+    }
+    .essay-textarea:focus { outline: none; border-color: #ea580c; }
+
+    .status-panel {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .status-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 14px;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 12px;
+      background-color: #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .progress-bar { width: 0%; height: 100%; background-color: #ea580c; transition: width 1s linear; }
+
+    .btn-group { display: flex; gap: 12px; }
+    .btn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-start { background-color: #ea580c; color: white; }
+    .btn-start:hover { background-color: #c2410c; }
+    .btn-submit { background-color: #10b981; color: white; }
+    .btn-submit:hover { background-color: #059669; }
+
+    .score-card {
+      display: none;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #ffedd5;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
+    }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #fff7ed;
+      padding-bottom: 12px;
+    }
+    .score-header h3 { font-size: 17px; color: #c2410c; }
+    .overall-badge { font-size: 24px; font-weight: 800; color: #ea580c; }
+
+    .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .score-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .score-box .label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+    .score-box .val { font-size: 20px; font-weight: 700; color: #0f172a; }
+
+    .analysis-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Write Essay &bull; Form Evaluation Active</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="pte-container">
+      <div class="pte-header">
+        <div>
+          <h2>Write Essay</h2>
+          <p>주제를 읽고 20분 내에 200~300단어의 논리적인 에세이를 작성하세요.</p>
+        </div>
+        <select id="essay-selector" class="question-select">
+          <option value="0">주제 1 (인공지능과 일자리)</option>
+          <option value="1">주제 2 (대중교통 무료화)</option>
+          <option value="2">주제 3 (기후변화와 개인의 책임)</option>
+        </select>
+      </div>
+
+      <div class="prompt-box" id="essay-prompt"></div>
+
+      <div class="status-panel">
+        <div class="status-title">
+          <span id="status-label">상태: [에세이 작성 시작]을 눌러 20분 시험을 시작하세요</span>
+          <span id="timer-label">20:00</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="editor-toolbar">
+        <div>
+          <button class="btn-tool" id="btn-cut">Cut</button>
+          <button class="btn-tool" id="btn-copy">Copy</button>
+          <button class="btn-tool" id="btn-paste">Paste</button>
+        </div>
+        <div class="word-counter-badge" id="word-badge">0 / 200~300 Words</div>
+      </div>
+
+      <textarea id="essay-input" class="essay-textarea" placeholder="여기에 에세이를 작성하세요... (권장: 서론-본론1-본론2-결론 4단락 구성)" disabled></textarea>
+
+      <div class="btn-group">
+        <button class="btn btn-start" id="start-btn">에세이 작성 시작 (20분)</button>
+        <button class="btn btn-submit" id="submit-btn" style="display: none;">에세이 제출 및 채점</button>
+      </div>
+
+      <div class="score-card" id="score-card">
+        <div class="score-header">
+          <h3>📊 Write Essay 형식 채점 리포트</h3>
+          <div class="overall-badge" id="overall-badge">-- / 90</div>
+        </div>
+        <div class="score-grid">
+          <div class="score-box"><div class="label">형식/분량 (Form)</div><div class="val" id="form-score">--</div></div>
+          <div class="score-box"><div class="label">단락 구성 (Structure)</div><div class="val" id="struct-score">--</div></div>
+          <div class="score-box"><div class="label">어휘 다양성 (Vocab)</div><div class="val" id="vocab-score">--</div></div>
+        </div>
+        <div class="analysis-details" id="analysis-details"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="questions.js"></script>
+  <script>
+    const WE_ITEMS = PTE_QUESTION_BANK.getAll('we');
+    const ESSAY_PROMPTS = WE_ITEMS.map(q => q.prompt);
+    const TOTAL_TIME = 20 * 60;
+    let remainingTime = TOTAL_TIME;
+    let timerInterval = null;
+
+    const essaySelector = document.getElementById('essay-selector');
+    const essayPrompt = document.getElementById('essay-prompt');
+    const statusLabel = document.getElementById('status-label');
+    const timerLabel = document.getElementById('timer-label');
+    const progressBar = document.getElementById('progress-bar');
+    const essayInput = document.getElementById('essay-input');
+    const wordBadge = document.getElementById('word-badge');
+    const startBtn = document.getElementById('start-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const scoreCard = document.getElementById('score-card');
+    const analysisDetails = document.getElementById('analysis-details');
+
+    essayPrompt.innerText = ESSAY_PROMPTS[0];
+    const qBar = initDynamicQuestionBar('we', essaySelector, (idx, item) => {
+      resetTest();
+      essayPrompt.innerText = item.prompt;
+    });
+
+    function resetTest() {
+      clearInterval(timerInterval);
+      remainingTime = TOTAL_TIME;
+      statusLabel.innerText = "상태: [에세이 작성 시작]을 눌러주세요";
+      timerLabel.innerText = "20:00";
+      progressBar.style.width = "0%";
+      essayInput.value = "";
+      essayInput.disabled = true;
+      wordBadge.innerText = "0 / 200~300 Words";
+      wordBadge.className = "word-counter-badge";
+      startBtn.style.display = "inline-block";
+      startBtn.disabled = false;
+      submitBtn.style.display = "none";
+      scoreCard.style.display = "none";
+    }
+
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = "none";
+      submitBtn.style.display = "inline-block";
+      essayInput.disabled = false;
+      essayInput.focus();
+      statusLabel.innerText = "상태: ● 시험 진행 중 (20분 제한시간)";
+
+      timerInterval = setInterval(() => {
+        remainingTime--;
+        const mins = Math.floor(remainingTime / 60);
+        const secs = remainingTime % 60;
+        timerLabel.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        progressBar.style.width = `${((TOTAL_TIME - remainingTime) / TOTAL_TIME) * 100}%`;
+
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+          submitAndEvaluate();
+        }
+      }, 1000);
+    });
+
+    essayInput.addEventListener('input', () => {
+      const text = essayInput.value.trim();
+      const words = text ? text.split(/\s+/).filter(w => w.length > 0) : [];
+      const count = words.length;
+
+      wordBadge.innerText = `${count} / 200~300 Words`;
+      if (count >= 200 && count <= 300) wordBadge.className = "word-counter-badge word-valid";
+      else if (count > 300 || (count >= 150 && count < 200)) wordBadge.className = "word-counter-badge word-invalid";
+      else wordBadge.className = "word-counter-badge";
+    });
+
+    document.getElementById('btn-cut').addEventListener('click', () => {
+      const selected = essayInput.value.substring(essayInput.selectionStart, essayInput.selectionEnd);
+      navigator.clipboard.writeText(selected);
+      essayInput.setRangeText('', essayInput.selectionStart, essayInput.selectionEnd, 'end');
+      essayInput.dispatchEvent(new Event('input'));
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', () => {
+      const selected = essayInput.value.substring(essayInput.selectionStart, essayInput.selectionEnd);
+      navigator.clipboard.writeText(selected);
+    });
+
+    document.getElementById('btn-paste').addEventListener('click', async () => {
+      const text = await navigator.clipboard.readText();
+      essayInput.setRangeText(text, essayInput.selectionStart, essayInput.selectionEnd, 'end');
+      essayInput.dispatchEvent(new Event('input'));
+    });
+
+    submitBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      submitAndEvaluate();
+    });
+
+    function submitAndEvaluate() {
+      essayInput.disabled = true;
+      submitBtn.style.display = "none";
+      startBtn.style.display = "inline-block";
+      startBtn.innerText = "다시 작성하기";
+      startBtn.disabled = false;
+      statusLabel.innerText = "상태: 에세이 제출 및 채점 완료";
+      progressBar.style.width = "100%";
+
+      const text = essayInput.value.trim();
+      const words = text ? text.split(/\s+/).filter(w => w.length > 0) : [];
+      const wordCount = words.length;
+
+      let formScore = 0;
+      let formFeedback = "";
+      if (wordCount >= 200 && wordCount <= 300) {
+        formScore = 90;
+        formFeedback = "최적 규격 (200~300단어 완벽 충족)";
+      } else if ((wordCount >= 180 && wordCount < 200) || (wordCount > 300 && wordCount <= 350)) {
+        formScore = 70;
+        formFeedback = "경미한 분량 오차 (감점 요인)";
+      } else if (wordCount >= 120 && wordCount < 180) {
+        formScore = 50;
+        formFeedback = "분량 부족 (최소 200단어 이상 필요)";
+      } else {
+        formScore = 20;
+        formFeedback = "심각한 분량 미달/초과";
+      }
+
+      const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+      let structScore = 70;
+      if (paragraphs.length >= 3 && paragraphs.length <= 5) structScore = 85;
+      else if (paragraphs.length === 1) structScore = 50;
+
+      const uniqueWords = new Set(words.map(w => w.toLowerCase()));
+      const vocabRatio = words.length > 0 ? (uniqueWords.size / words.length) : 0;
+      const vocabScore = Math.min(90, Math.round(40 + vocabRatio * 80));
+
+      const overall = Math.round(formScore * 0.4 + structScore * 0.35 + vocabScore * 0.25);
+
+      document.getElementById('overall-badge').innerText = `${overall} / 90`;
+      document.getElementById('form-score').innerText = `${formScore}점`;
+      document.getElementById('struct-score').innerText = `${structScore}점`;
+      document.getElementById('vocab-score').innerText = `${vocabScore}점`;
+
+      analysisDetails.innerHTML = `
+        <b>작성 단어 수:</b> ${wordCount} 단어 (${formFeedback})<br>
+        <b>단락 수:</b> ${paragraphs.length}개 단락 (권장: 서론-본론1-본론2-결론 4단락)<br>
+        <b>어휘 다양성 비율:</b> ${Math.round(vocabRatio * 100)}% (고유 단어: ${uniqueWords.size}개)<br>
+        <b>소요 시간:</b> ${Math.floor((TOTAL_TIME - remainingTime) / 60)}분 ${(TOTAL_TIME - remainingTime) % 60}초
+      `;
+
+      scoreCard.style.display = "block";
+      setTimeout(() => qBar.refreshOptions(), 100);
+
+      const curItem = WE_ITEMS[essaySelector.value] || {};
+      savePteResult({
+        questionId: curItem.id,
+        type: 'WE',
+        title: 'Essay: ' + (curItem.title || essayPrompt.innerText.substring(0, 20)),
+        overall: overall,
+        content: formScore,
+        fluency: structScore,
+        pron: vocabScore,
+        wpm: Math.round(wordCount / Math.max(1, (TOTAL_TIME - remainingTime) / 60))
+      });
+    }
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

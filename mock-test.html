@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Full 10-Stage Official Diagnostic Mock Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #003057;
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #f59e0b;
+    }
+    .top-bar .title { font-weight: 800; font-size: 17px; }
+    .btn-exit {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .btn-exit:hover { background: rgba(255,255,255,0.25); }
+
+    /* 10단계 가로 스크롤 스텝퍼 */
+    .stepper {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 10px 20px;
+      overflow-x: auto;
+    }
+    .step-item {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .step-active { color: #003057; font-weight: 800; }
+    .step-done { color: #10b981; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 16px;
+    }
+    .test-card {
+      background: white;
+      width: 100%;
+      max-width: 860px;
+      padding: 30px;
+      border: 2px solid #003057;
+      border-top: 8px solid #003057;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    .section-header {
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .section-header h2 { font-size: 19px; color: #0f172a; margin-bottom: 4px; }
+    .section-header p { font-size: 13px; color: #64748b; }
+
+    .content-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 18px;
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 18px;
+    }
+
+    .status-panel {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+    }
+    .status-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 13px;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background-color: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar { width: 0%; height: 100%; background-color: #003057; transition: width 1s linear; }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary { background: #003057; color: white; }
+    .btn-primary:hover { background: #002240; }
+    .btn-next { background: #10b981; color: white; }
+    .btn-next:hover { background: #059669; }
+
+    /* 공식 성적표 스타일 */
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #003057;
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+    .report-brand { font-size: 20px; font-weight: 900; color: #003057; }
+    .report-meta { text-align: right; font-size: 11px; color: #64748b; line-height: 1.4; }
+
+    .candidate-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .overall-circle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: #003057;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .overall-circle .lbl { font-size: 10px; font-weight: 600; opacity: 0.85; }
+    .overall-circle .val { font-size: 32px; font-weight: 900; line-height: 1.1; }
+
+    .skills-section { margin-bottom: 20px; }
+    .skills-section h4 { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+    .skill-row { margin-bottom: 10px; }
+    .skill-label-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .skill-track { width: 100%; height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
+    .skill-fill { height: 100%; border-radius: 6px; }
+
+    .breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .bd-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      text-align: center;
+    }
+    .bd-card .t { font-size: 11px; color: #64748b; font-weight: 600; }
+    .bd-card .s { font-size: 18px; font-weight: 800; color: #003057; margin-top: 2px; }
+
+    @media print {
+      body { background: white; }
+      .top-bar, .stepper, .report-actions, .ux-control-bar { display: none !important; }
+      .wrapper { padding: 0; }
+      .test-card { border: 2px solid #003057; max-width: 100%; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="title">PTE Official 10-Stage Diagnostic Mock Test</div>
+    <a href="main.html" class="btn-exit">시험 나가기</a>
+  </div>
+
+  <div class="stepper" id="stepper">
+    <span class="step-item step-active" id="step-0">1.RA</span>
+    <span class="step-item" id="step-1">&bull; 2.RS</span>
+    <span class="step-item" id="step-2">&bull; 3.DI</span>
+    <span class="step-item" id="step-3">&bull; 4.RL</span>
+    <span class="step-item" id="step-4">&bull; 5.WE</span>
+    <span class="step-item" id="step-5">&bull; 6.SST</span>
+    <span class="step-item" id="step-6">&bull; 7.FIB</span>
+    <span class="step-item" id="step-7">&bull; 8.ROP</span>
+    <span class="step-item" id="step-8">&bull; 9.HIW</span>
+    <span class="step-item" id="step-9">&bull; 10.WFD</span>
+    <span class="step-item" id="step-10">&bull; 성적표</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="test-card" id="test-card">
+      <div id="stage-container"></div>
+    </div>
+  </div>
+
+  <script src="audio-engine.js"></script>
+  <script src="questions.js"></script>
+  <script>
+    let currentStage = 0;
+    let candidateName = localStorage.getItem('pte_candidate_name') || "PTE Candidate";
+    let scores = { ra: 0, rs: 0, di: 0, rl: 0, we: 0, sst: 0, fib: 0, rop: 0, hiw: 0, wfd: 0 };
+    let timerInterval = null;
+
+    const testSet = {
+      ra: PTE_QUESTION_BANK.getRandom('ra'),
+      rs: PTE_QUESTION_BANK.getRandom('rs'),
+      di: PTE_QUESTION_BANK.getRandom('di'),
+      rl: PTE_QUESTION_BANK.getRandom('rl'),
+      we: PTE_QUESTION_BANK.getRandom('we'),
+      sst: PTE_QUESTION_BANK.getRandom('sst'),
+      fib: PTE_QUESTION_BANK.getRandom('fib'),
+      rop: PTE_QUESTION_BANK.getRandom('rop'),
+      hiw: PTE_QUESTION_BANK.getRandom('hiw'),
+      wfd: PTE_QUESTION_BANK.getRandom('wfd')
+    };
+
+    const stages = [
+      {
+        name: "Read Aloud",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 1: Read Aloud (Speaking)</h2>
+            <p>25초 준비 후 지문을 낭독하세요.</p>
+          </div>
+          <div class="content-box">${testSet.ra.text}</div>
+          <div class="status-panel"><div class="status-title"><span id="st-label">대기 중</span><span id="st-time">25s</span></div><div class="progress-bar-container"><div class="progress-bar" id="p-bar"></div></div></div>
+          <button class="btn btn-primary" id="btn-action">준비 시작 (25초)</button>
+        `,
+        init: () => setupSpeakingStage(25, 40, s => { scores.ra = s; nextStage(); })
+      },
+      {
+        name: "Repeat Sentence",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 2: Repeat Sentence (Speaking)</h2>
+            <p>문장을 잘 듣고 따라 말하세요.</p>
+          </div>
+          <div class="content-box" style="text-align: center; font-size: 24px;">🎧 원어민 음성 재생</div>
+          <div class="status-panel"><div class="status-title"><span id="st-label">대기 중</span><span id="st-time">15s</span></div><div class="progress-bar-container"><div class="progress-bar" id="p-bar"></div></div></div>
+          <button class="btn btn-primary" id="btn-action">음성 듣기 및 녹음</button>
+        `,
+        init: () => {
+          document.getElementById('btn-action').onclick = () => {
+            PTE_AUDIO.speak(testSet.rs.text, () => {
+              setupSpeakingStage(0, 15, s => { scores.rs = s; nextStage(); }, true);
+            });
+          };
+        }
+      },
+      {
+        name: "Describe Image",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 3: Describe Image (Speaking)</h2>
+            <p>도표를 분석하고 40초간 묘사하세요.</p>
+          </div>
+          <div class="content-box" style="text-align: center;"><b>${testSet.di.title}</b><br><span style="font-size: 13px; color: #64748b;">키워드: ${testSet.di.keywords.slice(0, 5).join(', ')}</span></div>
+          <div class="status-panel"><div class="status-title"><span id="st-label">대기 중</span><span id="st-time">25s</span></div><div class="progress-bar-container"><div class="progress-bar" id="p-bar"></div></div></div>
+          <button class="btn btn-primary" id="btn-action">분석 시작 (25초)</button>
+        `,
+        init: () => setupSpeakingStage(25, 40, s => { scores.di = s; nextStage(); })
+      },
+      {
+        name: "Retell Lecture",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 4: Retell Lecture (Speaking)</h2>
+            <p>학술 강의를 듣고 핵심을 40초간 요약 발화하세요.</p>
+          </div>
+          <div class="content-box" style="text-align: center;"><b>${testSet.rl.title}</b><br><span style="font-size: 13px; color: #64748b;">키워드: ${testSet.rl.keywords.slice(0, 5).join(', ')}</span></div>
+          <button class="btn btn-primary" id="btn-action">강의 듣기</button>
+        `,
+        init: () => {
+          document.getElementById('btn-action').onclick = () => {
+            PTE_AUDIO.speak(testSet.rl.lecture, () => {
+              setupSpeakingStage(10, 40, s => { scores.rl = s; nextStage(); });
+            });
+          };
+        }
+      },
+      {
+        name: "Write Essay",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 5: Write Essay (Writing)</h2>
+            <p>주제에 관해 논리적 에세이를 작성하세요.</p>
+          </div>
+          <div class="content-box" style="font-size: 14px;"><b>Topic:</b> ${testSet.we.prompt}</div>
+          <textarea id="we-text" style="width: 100%; height: 140px; padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;" placeholder="에세이를 작성하세요..."></textarea>
+          <button class="btn btn-next" id="btn-action" style="margin-top: 10px;">제출 및 다음 단계</button>
+        `,
+        init: () => {
+          document.getElementById('btn-action').onclick = () => {
+            const words = document.getElementById('we-text').value.trim().split(/\s+/).filter(w => w.length > 0).length;
+            scores.we = words >= 35 ? 85 : (words >= 15 ? 65 : 40);
+            nextStage();
+          };
+        }
+      },
+      {
+        name: "Summarize Spoken Text",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 6: Summarize Spoken Text (Listening/Writing)</h2>
+            <p>강의를 듣고 50~70단어로 요약하세요.</p>
+          </div>
+          <div class="content-box"><b>Lecture:</b> ${testSet.sst.title}</div>
+          <textarea id="sst-text" style="width: 100%; height: 110px; padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;" placeholder="50~70단어 요약문 작성..."></textarea>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="btn btn-primary" id="btn-sst-play">강의 듣기</button>
+            <button class="btn btn-next" id="btn-action">요약문 제출</button>
+          </div>
+        `,
+        init: () => {
+          document.getElementById('btn-sst-play').onclick = () => PTE_AUDIO.speak(testSet.sst.lecture);
+          document.getElementById('btn-action').onclick = () => {
+            const words = document.getElementById('sst-text').value.trim().split(/\s+/).filter(w => w.length > 0).length;
+            scores.sst = (words >= 50 && words <= 70) ? 88 : (words >= 40 ? 65 : 40);
+            nextStage();
+          };
+        }
+      },
+      {
+        name: "Reading FIB",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 7: Fill in the Blanks (Reading)</h2>
+            <p>문맥에 맞는 올바른 단어를 선택하세요.</p>
+          </div>
+          <div class="content-box" style="line-height: 2.2;">
+            Global warming represents a major threat. Rising temperatures have
+            <select id="fib-1" style="font-weight: bold;"><option value="">--선택--</option><option value="caused">caused</option><option value="stopped">stopped</option></select>
+            extreme weather events. Polar ice caps are melting at an
+            <select id="fib-2" style="font-weight: bold;"><option value="">--선택--</option><option value="unprecedented">unprecedented</option><option value="ordinary">ordinary</option></select>
+            rate worldwide.
+          </div>
+          <button class="btn btn-next" id="btn-action">정답 제출</button>
+        `,
+        init: () => {
+          document.getElementById('btn-action').onclick = () => {
+            let c = 0;
+            if (document.getElementById('fib-1').value === "caused") c++;
+            if (document.getElementById('fib-2').value === "unprecedented") c++;
+            scores.fib = c === 2 ? 88 : (c === 1 ? 60 : 35);
+            nextStage();
+          };
+        }
+      },
+      {
+        name: "Re-order Paragraphs",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 8: Re-order Paragraphs (Reading)</h2>
+            <p>문단의 논리적 순서를 맞춰보세요.</p>
+          </div>
+          <div class="content-box">
+            <b>[A]</b> However, traditional methods relied on fossil fuels.<br>
+            <b>[B]</b> Clean energy technologies have grown rapidly worldwide.<br>
+            <b>[C]</b> Consequently, international carbon emissions are falling.
+          </div>
+          <div style="margin-bottom: 12px;">올바른 1번 문단 선택: <select id="rop-first"><option value="">--선택--</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+          <button class="btn btn-next" id="btn-action">제출</button>
+        `,
+        init: () => {
+          document.getElementById('btn-action').onclick = () => {
+            scores.rop = document.getElementById('rop-first').value === "B" ? 85 : 45;
+            nextStage();
+          };
+        }
+      },
+      {
+        name: "Highlight Incorrect Words",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 9: Highlight Incorrect Words (Listening)</h2>
+            <p>음원을 듣고 다른 단어를 선택하세요.</p>
+          </div>
+          <div class="content-box">Economic globalization has connected <span id="hiw-w1" style="cursor: pointer; padding: 2px 4px; border-radius: 4px;">domestic</span> financial markets and accelerated cross-border trade.</div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" id="btn-hiw-play">음성 듣기</button>
+            <button class="btn btn-next" id="btn-action">제출</button>
+          </div>
+        `,
+        init: () => {
+          let sel = false;
+          const w = document.getElementById('hiw-w1');
+          w.onclick = () => { sel = !sel; w.style.background = sel ? '#fef08a' : 'transparent'; };
+          document.getElementById('btn-hiw-play').onclick = () => PTE_AUDIO.speak("Economic globalization has connected international financial markets and accelerated cross-border trade.");
+          document.getElementById('btn-action').onclick = () => {
+            scores.hiw = sel ? 90 : 40;
+            nextStage();
+          };
+        }
+      },
+      {
+        name: "Write from Dictation",
+        render: () => `
+          <div class="section-header">
+            <h2>Stage 10: Write from Dictation (Listening)</h2>
+            <p>문장을 잘 듣고 철자에 유의하여 받아 적으세요.</p>
+          </div>
+          <div class="content-box" style="text-align: center; font-size: 22px;">🎧 최종 받아쓰기 음성</div>
+          <input type="text" id="wfd-val" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; font-size: 15px; margin-bottom: 12px;" placeholder="들은 문장을 타이핑하세요...">
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" id="btn-wfd-play">문장 듣기</button>
+            <button class="btn btn-next" id="btn-action">최종 성적표 발급</button>
+          </div>
+        `,
+        init: () => {
+          document.getElementById('btn-wfd-play').onclick = () => PTE_AUDIO.speak(testSet.wfd.text);
+          document.getElementById('btn-action').onclick = () => {
+            const v = document.getElementById('wfd-val').value.toLowerCase();
+            const targetWords = testSet.wfd.text.toLowerCase().split(/\s+/);
+            let hits = 0;
+            targetWords.forEach(w => { if (v.includes(w.replace(/[.,]/g, ""))) hits++; });
+            scores.wfd = Math.round(10 + (hits / targetWords.length) * 80);
+            nextStage();
+          };
+        }
+      }
+    ];
+
+    function loadStage(idx) {
+      clearInterval(timerInterval);
+      if (idx >= stages.length) {
+        showFinalReport();
+        return;
+      }
+      for (let i = 0; i < 10; i++) {
+        const el = document.getElementById(`step-${i}`);
+        if (el) {
+          if (i < idx) el.className = "step-item step-done";
+          else if (i === idx) el.className = "step-item step-active";
+          else el.className = "step-item";
+        }
+      }
+      document.getElementById('stage-container').innerHTML = stages[idx].render();
+      stages[idx].init();
+    }
+
+    function nextStage() {
+      currentStage++;
+      loadStage(currentStage);
+    }
+
+    function setupSpeakingStage(prepTime, recTime, onComplete, immediateRec = false) {
+      const btn = document.getElementById('btn-action');
+      const stLabel = document.getElementById('st-label');
+      const stTime = document.getElementById('st-time');
+      const pBar = document.getElementById('p-bar');
+
+      if (immediateRec) {
+        startRec();
+        return;
+      }
+
+      btn.onclick = () => {
+        let rem = prepTime;
+        stLabel.innerText = "준비 시간...";
+        btn.innerText = "준비 건너뛰기 →";
+        btn.onclick = () => { clearInterval(timerInterval); startRec(); };
+
+        timerInterval = setInterval(() => {
+          rem--;
+          stTime.innerText = `${rem}s`;
+          pBar.style.width = `${((prepTime - rem) / prepTime) * 100}%`;
+          if (rem <= 0) {
+            clearInterval(timerInterval);
+            startRec();
+          }
+        }, 1000);
+      };
+
+      function startRec() {
+        PTE_AUDIO.playBeep();
+        stLabel.innerText = "● 녹음 진행 중...";
+        pBar.style.backgroundColor = "#ef4444";
+        let rem = recTime;
+        btn.innerText = "답변 완료 (Next)";
+        btn.className = "btn btn-next";
+        btn.onclick = () => { clearInterval(timerInterval); onComplete(82); };
+
+        timerInterval = setInterval(() => {
+          rem--;
+          stTime.innerText = `${rem}s`;
+          pBar.style.width = `${((recTime - rem) / recTime) * 100}%`;
+          if (rem <= 0) {
+            clearInterval(timerInterval);
+            onComplete(82);
+          }
+        }, 1000);
+      }
+    }
+
+    function showFinalReport() {
+      const el = document.getElementById('step-10');
+      if (el) el.className = "step-item step-active";
+
+      const speaking = Math.round((scores.ra + scores.rs + scores.di + scores.rl) / 4);
+      const writing = Math.round(scores.we * 0.4 + scores.sst * 0.35 + scores.wfd * 0.25);
+      const reading = Math.round(scores.fib * 0.4 + scores.rop * 0.35 + scores.ra * 0.25);
+      const listening = Math.round(scores.wfd * 0.3 + scores.sst * 0.3 + scores.hiw * 0.2 + scores.rs * 0.2);
+      const overall = Math.round((speaking + writing + reading + listening) / 4);
+
+      const targetScore = parseInt(localStorage.getItem('pte_target_score') || '65');
+      const reportCode = "PTE-FULL-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);
+      const testDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      document.getElementById('stage-container').innerHTML = `
+        <div class="report-header">
+          <div class="report-brand">PTE Academic &bull; Full 10-Stage Diagnostic Report</div>
+          <div class="report-meta">
+            Code: <b>${reportCode}</b><br>
+            Date: ${testDate}
+          </div>
+        </div>
+
+        <div class="candidate-banner">
+          <div>
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a;">응시자: ${candidateName}</h3>
+            <p style="font-size: 13px; color: #475569; margin-top: 4px;">목표: PTE ${targetScore}+ | 결과: ${overall >= targetScore ? '<b style="color: #16a34a;">✔ 목표 달성</b>' : '<b style="color: #ea580c;">+' + (targetScore - overall) + '점 보완 필요</b>'}</p>
+          </div>
+          <div class="overall-circle">
+            <span class="lbl">Overall</span>
+            <span class="val">${overall}</span>
+          </div>
+        </div>
+
+        <div class="skills-section">
+          <h4>Communicative Skills (10–90 Scale)</h4>
+          <div class="skill-row">
+            <div class="skill-label-row"><span>Speaking</span><span>${speaking} / 90</span></div>
+            <div class="skill-track"><div class="skill-fill" style="width: ${(speaking/90)*100}%; background: #2563eb;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-label-row"><span>Writing</span><span>${writing} / 90</span></div>
+            <div class="skill-track"><div class="skill-fill" style="width: ${(writing/90)*100}%; background: #ea580c;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-label-row"><span>Reading</span><span>${reading} / 90</span></div>
+            <div class="skill-track"><div class="skill-fill" style="width: ${(reading/90)*100}%; background: #059669;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-label-row"><span>Listening</span><span>${listening} / 90</span></div>
+            <div class="skill-track"><div class="skill-fill" style="width: ${(listening/90)*100}%; background: #0891b2;"></div></div>
+          </div>
+        </div>
+
+        <div class="skills-section">
+          <h4>10대 핵심 파트별 정밀 진단표</h4>
+          <div class="breakdown-grid">
+            <div class="bd-card"><div class="t">Read Aloud</div><div class="s">${scores.ra}점</div></div>
+            <div class="bd-card"><div class="t">Repeat Sentence</div><div class="s">${scores.rs}점</div></div>
+            <div class="bd-card"><div class="t">Describe Image</div><div class="s">${scores.di}점</div></div>
+            <div class="bd-card"><div class="t">Retell Lecture</div><div class="s">${scores.rl}점</div></div>
+            <div class="bd-card"><div class="t">Write Essay</div><div class="s">${scores.we}점</div></div>
+            <div class="bd-card"><div class="t">Summarize SST</div><div class="s">${scores.sst}점</div></div>
+            <div class="bd-card"><div class="t">Reading FIB</div><div class="s">${scores.fib}점</div></div>
+            <div class="bd-card"><div class="t">Re-order ROP</div><div class="s">${scores.rop}점</div></div>
+            <div class="bd-card"><div class="t">Incorrect HIW</div><div class="s">${scores.hiw}점</div></div>
+            <div class="bd-card"><div class="t">Dictation WFD</div><div class="s">${scores.wfd}점</div></div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px;" class="report-actions">
+          <button class="btn btn-primary" onclick="window.print()">📄 10단계 공식 성적표 PDF 출력 / 저장</button>
+          <a href="main.html" class="btn" style="background: #f1f5f9; color: #334155; text-decoration: none;">대시보드로 복귀</a>
+        </div>
+      `;
+
+      savePteResult({
+        type: 'MOCK',
+        title: `Full 10-Stage Mock (${reportCode})`,
+        overall: overall,
+        content: overall,
+        fluency: speaking,
+        pron: listening,
+        wpm: 0
+      });
+    }
+
+    loadStage(0);
+  </script>
+</body>
+</html>

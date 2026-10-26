@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Smart Mistake Review Book</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #dc2626; font-weight: 700; font-size: 14px; }
+    .badge { background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .container { max-width: 800px; margin: 32px auto; padding: 0 20px; flex: 1; width: 100%; }
+    .header-section { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .header-section h1 { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .header-section p { font-size: 14px; color: #64748b; }
+    .btn-clear {
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      color: #64748b;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-clear:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    .tab-btn {
+      background: white;
+      border: 1px solid #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .tab-btn.active { background: #dc2626; border-color: #dc2626; color: white; }
+
+    .mistake-list { display: flex; flex-direction: column; gap: 12px; }
+    .mistake-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-left: 5px solid #dc2626;
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .mistake-info .word { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+    .mistake-info .context { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .type-tag { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #475569; }
+
+    .btn-sound {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #2563eb;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn-master {
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      color: #10b981;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94a3b8;
+      background: white;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Mistake Review Book</span>
+  </div>
+
+  <div class="container">
+    <div class="header-section">
+      <div>
+        <h1>스마트 오답 노트 &bull; 취약 단어장</h1>
+        <p>실전 연습 및 모의고사에서 놓친 단어들을 원어민 음성으로 반복 청취하세요.</p>
+      </div>
+      <button class="btn-clear" id="btn-clear-all">오답 노트 전체 비우기</button>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="tab-btn active" data-filter="ALL">전체 보기</button>
+      <button class="tab-btn" data-filter="RA">Speaking (RA)</button>
+      <button class="tab-btn" data-filter="RS">Speaking (RS)</button>
+      <button class="tab-btn" data-filter="WFD">Listening (WFD)</button>
+      <button class="tab-btn" data-filter="FIB">Reading (FIB)</button>
+    </div>
+
+    <div class="mistake-list" id="mistake-list"></div>
+  </div>
+
+  <script src="audio-engine.js"></script>
+  <script>
+    let currentFilter = 'ALL';
+
+    function getMistakes() {
+      return JSON.parse(localStorage.getItem('pte_mistakes') || '[]');
+    }
+
+    function renderMistakes() {
+      const allMistakes = getMistakes();
+      const listEl = document.getElementById('mistake-list');
+
+      const filtered = currentFilter === 'ALL'
+        ? allMistakes
+        : allMistakes.filter(m => m.type === currentFilter);
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size: 36px; margin-bottom: 12px;">🎉</div>
+            <p style="font-size: 16px; font-weight: 700; color: #475569;">오답으로 기록된 취약 단어가 없습니다!</p>
+            <p style="font-size: 13px; margin-top: 4px;">문제를 풀며 놓친 단어가 생기면 여기에 자동으로 추가됩니다.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map((m) => `
+        <div class="mistake-card">
+          <div class="mistake-info">
+            <div class="word">
+              <span>${m.word}</span>
+              <span class="type-tag">${m.type}</span>
+            </div>
+            <div class="context">${m.context || ''}</div>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <button class="btn-sound" onclick="PTE_AUDIO.speak('${m.word}')" title="원어민 발음 듣기">🔊</button>
+            <button class="btn-master" onclick="masterWord(${m.id})">암기 완료 ✔</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function masterWord(id) {
+      const mistakes = getMistakes().filter(m => m.id !== id);
+      localStorage.setItem('pte_mistakes', JSON.stringify(mistakes));
+      renderMistakes();
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentFilter = e.target.dataset.filter;
+        renderMistakes();
+      });
+    });
+
+    document.getElementById('btn-clear-all').addEventListener('click', () => {
+      if (confirm('오답 노트의 모든 단어를 삭제하시겠습니까?')) {
+        localStorage.removeItem('pte_mistakes');
+        renderMistakes();
+      }
+    });
+
+    renderMistakes();
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

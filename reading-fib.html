@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Reading &amp; Writing Fill in the Blanks Simulator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #059669; font-weight: 700; font-size: 14px; }
+    .badge { background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .pte-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 780px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-top: 6px solid #059669;
+    }
+    .pte-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .pte-header h2 { font-size: 20px; color: #0f172a; }
+    .pte-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .question-select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    .passage-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 24px;
+      font-size: 17px;
+      line-height: 2.2;
+      color: #1e293b;
+      margin-bottom: 24px;
+    }
+
+    .blank-select {
+      padding: 4px 8px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 2px solid #94a3b8;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #1e293b;
+      cursor: pointer;
+      margin: 0 4px;
+      transition: all 0.2s;
+    }
+    .blank-select:focus { outline: none; border-color: #059669; }
+    .blank-correct { border-color: #10b981 !important; background-color: #dcfce7 !important; color: #15803d !important; }
+    .blank-wrong { border-color: #ef4444 !important; background-color: #fee2e2 !important; color: #b91c1c !important; }
+
+    .correct-answer-tag {
+      font-size: 12px;
+      font-weight: 700;
+      background: #10b981;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      display: inline-block;
+    }
+
+    .btn-group { display: flex; gap: 12px; }
+    .btn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-submit { background-color: #059669; color: white; }
+    .btn-submit:hover { background-color: #047857; }
+    .btn-reset { background-color: #64748b; color: white; }
+    .btn-reset:hover { background-color: #475569; }
+
+    .score-card {
+      display: none;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #a7f3d0;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
+    }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ecfdf5;
+      padding-bottom: 12px;
+    }
+    .score-header h3 { font-size: 17px; color: #047857; }
+    .overall-badge { font-size: 24px; font-weight: 800; color: #059669; }
+
+    .explanation-list {
+      margin-top: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #334155;
+    }
+    .explanation-item { margin-bottom: 8px; }
+    .explanation-item b { color: #0f172a; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Reading &bull; FIB Active</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="pte-container">
+      <div class="pte-header">
+        <div>
+          <h2>Fill in the Blanks</h2>
+          <p>지문의 문맥을 파악하여 각 빈칸 드롭다운에서 가장 적절한 어휘를 선택하세요.</p>
+        </div>
+        <select id="passage-selector" class="question-select">
+          <option value="0">지문 1 (기후변화와 생태계)</option>
+          <option value="1">지문 2 (인공지능과 데이터 분석)</option>
+        </select>
+      </div>
+
+      <div class="passage-box" id="passage-box"></div>
+
+      <div class="btn-group">
+        <button class="btn btn-submit" id="submit-btn">답안 제출 및 채점</button>
+        <button class="btn btn-reset" id="reset-btn" style="display: none;">다시 풀기</button>
+      </div>
+
+      <div class="score-card" id="score-card">
+        <div class="score-header">
+          <h3>📊 Fill in the Blanks 채점 결과</h3>
+          <div class="overall-badge" id="overall-badge">-- / 90</div>
+        </div>
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px;" id="score-summary"></div>
+        <div class="explanation-list" id="explanation-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="questions.js"></script>
+  <script>
+    const PASSAGES = PTE_QUESTION_BANK.getAll('fib');
+    const passageSelector = document.getElementById('passage-selector');
+    const passageBox = document.getElementById('passage-box');
+    const submitBtn = document.getElementById('submit-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const scoreCard = document.getElementById('score-card');
+    const overallBadge = document.getElementById('overall-badge');
+    const scoreSummary = document.getElementById('score-summary');
+    const explanationList = document.getElementById('explanation-list');
+
+    let currentPassage = PASSAGES[0];
+
+    function renderPassage(passage) {
+      currentPassage = passage;
+      scoreCard.style.display = "none";
+      submitBtn.style.display = "inline-block";
+      resetBtn.style.display = "none";
+
+      let html = "";
+      passage.template.forEach((item) => {
+        if (typeof item === 'string') {
+          html += item;
+        } else {
+          let opts = item.options.map(o => `<option value="${o}">${o}</option>`).join("");
+          html += `
+            <select class="blank-select" id="blank-${item.id}">
+              <option value="" disabled selected>-- 선택 --</option>
+              ${opts}
+            </select>
+          `;
+        }
+      });
+      passageBox.innerHTML = html;
+    }
+
+    renderPassage(PASSAGES[0]);
+    const qBar = initDynamicQuestionBar('fib', passageSelector, (idx, item) => {
+      renderPassage(item);
+    });
+
+    submitBtn.addEventListener('click', () => {
+      let blanks = currentPassage.template.filter(i => typeof i !== 'string');
+      let correctCount = 0;
+      let allAnswered = true;
+
+      blanks.forEach(b => {
+        const selectElem = document.getElementById(`blank-${b.id}`);
+        if (!selectElem.value) allAnswered = false;
+      });
+
+      if (!allAnswered) {
+        alert("모든 빈칸의 단어를 선택해 주세요!");
+        return;
+      }
+
+      let explainHtml = "";
+
+      blanks.forEach(b => {
+        const selectElem = document.getElementById(`blank-${b.id}`);
+        const userVal = selectElem.value;
+        selectElem.disabled = true;
+
+        if (userVal === b.answer) {
+          correctCount++;
+          selectElem.className = "blank-select blank-correct";
+        } else {
+          selectElem.className = "blank-select blank-wrong";
+          const tag = document.createElement("span");
+          tag.className = "correct-answer-tag";
+          tag.innerText = `정답: ${b.answer}`;
+          selectElem.parentNode.insertBefore(tag, selectElem.nextSibling);
+          saveMistake(b.answer, 'FIB', b.explain);
+        }
+
+        explainHtml += `
+          <div class="explanation-item">
+            <b>빈칸 [${b.id + 1}] 정답: ${b.answer}</b> &bull; 내 선택: ${userVal}<br>
+            &rarr; 해설: ${b.explain}
+          </div>
+        `;
+      });
+
+      const totalBlanks = blanks.length;
+      const matchRatio = correctCount / totalBlanks;
+      const overall = Math.round(10 + matchRatio * 80);
+
+      overallBadge.innerText = `${overall} / 90`;
+      scoreSummary.innerHTML = `맞춘 빈칸: <b>${correctCount} / ${totalBlanks}</b>개 (정답률 ${Math.round(matchRatio * 100)}%)`;
+      explanationList.innerHTML = explainHtml;
+      scoreCard.style.display = "block";
+      setTimeout(() => qBar.refreshOptions(), 100);
+
+      submitBtn.style.display = "none";
+      resetBtn.style.display = "inline-block";
+
+      savePteResult({
+        questionId: currentPassage.id,
+        type: 'FIB',
+        title: 'Reading: ' + currentPassage.title,
+        overall: overall,
+        content: overall,
+        fluency: 90,
+        pron: 90,
+        wpm: 0
+      });
+    });
+
+    resetBtn.addEventListener('click', () => {
+      renderPassage(currentPassage);
+    });
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

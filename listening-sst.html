@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Summarize Spoken Text Simulator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #4338ca; font-weight: 700; font-size: 14px; }
+    .badge { background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .pte-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 820px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-top: 6px solid #4338ca;
+    }
+    .pte-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .pte-header h2 { font-size: 20px; color: #0f172a; }
+    .pte-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .question-select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    .audio-box {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .audio-anim { font-size: 32px; margin-bottom: 6px; }
+    .audio-desc { font-size: 14px; font-weight: 600; color: #475569; }
+
+    .editor-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 16px;
+    }
+    .btn-tool {
+      background: white;
+      border: 1px solid #cbd5e1;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-tool:hover { background: #f1f5f9; }
+
+    .word-counter-badge {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .word-valid { background: #dcfce7; color: #15803d; }
+    .word-invalid { background: #fee2e2; color: #b91c1c; }
+
+    .summary-textarea {
+      width: 100%;
+      height: 180px;
+      padding: 16px;
+      font-size: 15px;
+      line-height: 1.7;
+      border: 1px solid #cbd5e1;
+      border-radius: 0 0 8px 8px;
+      resize: vertical;
+      font-family: inherit;
+      color: #1e293b;
+      margin-bottom: 20px;
+    }
+    .summary-textarea:focus { outline: none; border-color: #4338ca; }
+
+    .status-panel {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .status-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 14px;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background-color: #e2e8f0;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .progress-bar { width: 0%; height: 100%; background-color: #4338ca; transition: width 1s linear; }
+
+    .btn-group { display: flex; gap: 12px; }
+    .btn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-start { background-color: #4338ca; color: white; }
+    .btn-start:hover { background-color: #3730a3; }
+    .btn-submit { background-color: #10b981; color: white; }
+    .btn-submit:hover { background-color: #059669; }
+
+    .score-card {
+      display: none;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(67, 56, 202, 0.08);
+    }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #e0e7ff;
+      padding-bottom: 12px;
+    }
+    .score-header h3 { font-size: 17px; color: #4338ca; }
+    .overall-badge { font-size: 24px; font-weight: 800; color: #4338ca; }
+
+    .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .score-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .score-box .label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+    .score-box .val { font-size: 20px; font-weight: 700; color: #0f172a; }
+
+    .analysis-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 14px;
+    }
+    .model-box {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #312e81;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Listening &bull; Summarize Spoken Text</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="pte-container">
+      <div class="pte-header">
+        <div>
+          <h2>Summarize Spoken Text</h2>
+          <p>학술 강의를 듣고 10분 내에 핵심 내용을 50~70단어로 요약 작성하세요.</p>
+        </div>
+        <select id="question-selector" class="question-select"></select>
+      </div>
+
+      <div class="audio-box" id="audio-box">
+        <div class="audio-anim" id="audio-icon">🎧</div>
+        <div class="audio-desc" id="audio-desc">[강의 듣기 시작]을 누르면 원어민 학술 강의가 재생됩니다.</div>
+      </div>
+
+      <div class="status-panel">
+        <div class="status-title">
+          <span id="status-label">상태: 대기 중</span>
+          <span id="timer-label">10:00</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="editor-toolbar">
+        <div>
+          <button class="btn-tool" id="btn-cut">Cut</button>
+          <button class="btn-tool" id="btn-copy">Copy</button>
+          <button class="btn-tool" id="btn-paste">Paste</button>
+        </div>
+        <div class="word-counter-badge" id="word-badge">0 / 50~70 Words</div>
+      </div>
+
+      <textarea id="summary-input" class="summary-textarea" placeholder="여기에 요약문을 작성하세요... (권장: 50~70단어 단일/이중 문장 구성)" disabled></textarea>
+
+      <div class="btn-group">
+        <button class="btn btn-start" id="start-btn">강의 듣기 시작 (10분 카운트다운)</button>
+        <button class="btn btn-submit" id="submit-btn" style="display: none;">요약문 제출 및 채점</button>
+      </div>
+
+      <div class="score-card" id="score-card">
+        <div class="score-header">
+          <h3>📊 Summarize Spoken Text 채점 결과</h3>
+          <div class="overall-badge" id="overall-badge">-- / 90</div>
+        </div>
+        <div class="score-grid">
+          <div class="score-box"><div class="label">분량 형식 (Form)</div><div class="val" id="form-score">--</div></div>
+          <div class="score-box"><div class="label">핵심 키워드 (Content)</div><div class="val" id="content-score">--</div></div>
+          <div class="score-box"><div class="label">문법/어휘 (Grammar)</div><div class="val" id="grammar-score">--</div></div>
+        </div>
+        <div class="analysis-details" id="analysis-details"></div>
+        <div class="model-box" id="model-summary-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio-engine.js"></script>
+  <script src="questions.js"></script>
+  <script>
+    const TOTAL_TIME = 10 * 60; // 10분
+    let remainingTime = TOTAL_TIME;
+    let timerInterval = null;
+    let currentItem = null;
+
+    const questionSelector = document.getElementById('question-selector');
+    const audioIcon = document.getElementById('audio-icon');
+    const audioDesc = document.getElementById('audio-desc');
+    const statusLabel = document.getElementById('status-label');
+    const timerLabel = document.getElementById('timer-label');
+    const progressBar = document.getElementById('progress-bar');
+    const summaryInput = document.getElementById('summary-input');
+    const wordBadge = document.getElementById('word-badge');
+    const startBtn = document.getElementById('start-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const scoreCard = document.getElementById('score-card');
+    const analysisDetails = document.getElementById('analysis-details');
+    const modelSummaryBox = document.getElementById('model-summary-box');
+
+    function loadSst(item) {
+      currentItem = item;
+      resetTest();
+    }
+
+    function resetTest() {
+      clearInterval(timerInterval);
+      window.speechSynthesis.cancel();
+      remainingTime = TOTAL_TIME;
+      statusLabel.innerText = "상태: 대기 중";
+      timerLabel.innerText = "10:00";
+      progressBar.style.width = "0%";
+      summaryInput.value = "";
+      summaryInput.disabled = true;
+      wordBadge.innerText = "0 / 50~70 Words";
+      wordBadge.className = "word-counter-badge";
+      audioIcon.innerText = "🎧";
+      audioDesc.innerText = "[강의 듣기 시작]을 누르면 원어민 학술 강의가 재생됩니다.";
+      startBtn.style.display = "inline-block";
+      startBtn.disabled = false;
+      submitBtn.style.display = "none";
+      scoreCard.style.display = "none";
+    }
+
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = "none";
+      submitBtn.style.display = "inline-block";
+      summaryInput.disabled = false;
+      summaryInput.focus();
+      scoreCard.style.display = "none";
+
+      audioIcon.innerText = "🔊";
+      audioDesc.innerText = `강의 재생 중... ("${currentItem.title}") 노트테이킹을 시작하세요.`;
+      statusLabel.innerText = "상태: ● 강의 청취 및 요약 작성 중";
+
+      PTE_AUDIO.speak(currentItem.lecture, () => {
+        audioIcon.innerText = "✍️";
+        audioDesc.innerText = "강의가 종료되었습니다. 50~70단어로 요약문을 완성해 제출하세요.";
+      });
+
+      timerInterval = setInterval(() => {
+        remainingTime--;
+        const mins = Math.floor(remainingTime / 60);
+        const secs = remainingTime % 60;
+        timerLabel.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        progressBar.style.width = `${((TOTAL_TIME - remainingTime) / TOTAL_TIME) * 100}%`;
+
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+          submitAndEvaluate();
+        }
+      }, 1000);
+    });
+
+    summaryInput.addEventListener('input', () => {
+      const text = summaryInput.value.trim();
+      const words = text ? text.split(/\s+/).filter(w => w.length > 0) : [];
+      const count = words.length;
+
+      wordBadge.innerText = `${count} / 50~70 Words`;
+      if (count >= 50 && count <= 70) {
+        wordBadge.className = "word-counter-badge word-valid";
+      } else if (count > 70 || (count >= 40 && count < 50)) {
+        wordBadge.className = "word-counter-badge word-invalid";
+      } else {
+        wordBadge.className = "word-counter-badge";
+      }
+    });
+
+    document.getElementById('btn-cut').addEventListener('click', () => {
+      const selected = summaryInput.value.substring(summaryInput.selectionStart, summaryInput.selectionEnd);
+      navigator.clipboard.writeText(selected);
+      summaryInput.setRangeText('', summaryInput.selectionStart, summaryInput.selectionEnd, 'end');
+      summaryInput.dispatchEvent(new Event('input'));
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', () => {
+      const selected = summaryInput.value.substring(summaryInput.selectionStart, summaryInput.selectionEnd);
+      navigator.clipboard.writeText(selected);
+    });
+
+    document.getElementById('btn-paste').addEventListener('click', async () => {
+      const text = await navigator.clipboard.readText();
+      summaryInput.setRangeText(text, summaryInput.selectionStart, summaryInput.selectionEnd, 'end');
+      summaryInput.dispatchEvent(new Event('input'));
+    });
+
+    submitBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      submitAndEvaluate();
+    });
+
+    function submitAndEvaluate() {
+      summaryInput.disabled = true;
+      submitBtn.style.display = "none";
+      startBtn.style.display = "inline-block";
+      startBtn.innerText = "다시 작성하기";
+      startBtn.disabled = false;
+      statusLabel.innerText = "상태: 요약문 채점 완료";
+      progressBar.style.width = "100%";
+
+      const text = summaryInput.value.trim();
+      const words = text ? text.split(/\s+/).filter(w => w.length > 0) : [];
+      const wordCount = words.length;
+
+      // 1. Form Score (피어슨 공식 룰: 50~70단어 만점 90점, 40~49 or 71~100단어 60점, 그 외 20점)
+      let formScore = 0;
+      let formFeedback = "";
+      if (wordCount >= 50 && wordCount <= 70) {
+        formScore = 90;
+        formFeedback = "완벽한 권장 분량 (50~70단어 만점)";
+      } else if ((wordCount >= 40 && wordCount < 50) || (wordCount > 70 && wordCount <= 90)) {
+        formScore = 60;
+        formFeedback = "경미한 분량 오차 (감점 요인)";
+      } else {
+        formScore = 20;
+        formFeedback = "심각한 분량 미달 또는 초과";
+      }
+
+      // 2. Content Score (핵심 키워드 포함 비율)
+      const lower = text.toLowerCase();
+      let hitKeywords = [];
+      currentItem.keywords.forEach(kw => {
+        if (lower.includes(kw.toLowerCase())) hitKeywords.push(kw);
+      });
+      const kwRatio = currentItem.keywords.length > 0 ? (hitKeywords.length / currentItem.keywords.length) : 0;
+      const contentScore = Math.round(10 + Math.min(1.0, kwRatio * 1.2) * 80);
+
+      // 3. Grammar & Vocab
+      const uniqueRatio = words.length > 0 ? (new Set(words.map(w => w.toLowerCase())).size / words.length) : 0;
+      const grammarScore = Math.round(40 + uniqueRatio * 50);
+
+      const overall = Math.round(formScore * 0.35 + contentScore * 0.45 + grammarScore * 0.2);
+
+      document.getElementById('overall-badge').innerText = `${overall} / 90`;
+      document.getElementById('form-score').innerText = `${formScore}점`;
+      document.getElementById('content-score').innerText = `${contentScore}점`;
+      document.getElementById('grammar-score').innerText = `${grammarScore}점`;
+
+      analysisDetails.innerHTML = `
+        <b>단어 수 판정:</b> ${wordCount} 단어 (${formFeedback})<br>
+        <b>적중된 핵심 개념:</b> ${hitKeywords.length} / ${currentItem.keywords.length}개 (${hitKeywords.join(', ') || '없음'})<br>
+        <b>소요 시간:</b> ${Math.floor((TOTAL_TIME - remainingTime) / 60)}분 ${(TOTAL_TIME - remainingTime) % 60}초
+      `;
+
+      modelSummaryBox.innerHTML = `💡 <b>모범 요약문 (Model Summary):</b><br>${currentItem.modelSummary}`;
+      scoreCard.style.display = "block";
+
+      savePteResult({
+        questionId: currentItem.id,
+        type: 'SST',
+        title: 'SST: ' + currentItem.title,
+        overall: overall,
+        content: contentScore,
+        fluency: formScore,
+        pron: grammarScore,
+        wpm: 0
+      });
+    }
+
+    const qBar = initDynamicQuestionBar('sst', questionSelector, (idx, item) => {
+      loadSst(item);
+    });
+
+    loadSst(qBar.getCurrentItem() || PTE_QUESTION_BANK.getAll('sst')[0]);
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

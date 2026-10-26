@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Repeat Sentence Simulator with Multi-Accent Engine</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #0284c7; font-weight: 700; font-size: 14px; }
+    .badge { background: #f0fdf4; color: #15803d; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .pte-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 720px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-top: 6px solid #0284c7;
+    }
+    .pte-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .pte-header h2 { font-size: 20px; color: #0f172a; }
+    .pte-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+    .accent-group { display: flex; gap: 6px; }
+    .btn-accent {
+      border: 1px solid #cbd5e1;
+      background: white;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .btn-accent.active {
+      background: #0284c7;
+      color: white;
+      border-color: #0284c7;
+    }
+
+    .question-select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    .audio-status-box {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      font-size: 16px;
+      color: #475569;
+      margin-bottom: 24px;
+    }
+    .audio-anim { font-size: 32px; margin-bottom: 8px; }
+
+    .status-panel {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 24px;
+    }
+    .status-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 15px;
+      color: #334155;
+      margin-bottom: 10px;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 14px;
+      background-color: #e2e8f0;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .progress-bar { width: 0%; height: 100%; background-color: #0284c7; transition: width 1s linear; }
+
+    .btn-group { display: flex; gap: 12px; }
+    .btn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-start { background-color: #0284c7; color: white; }
+    .btn-start:hover { background-color: #0369a1; }
+    .btn-stop { background-color: #ef4444; color: white; }
+    .btn-stop:hover { background-color: #dc2626; }
+    .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
+    .audio-playback { margin-top: 20px; width: 100%; display: none; }
+
+    .score-card {
+      display: none;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #bae6fd;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
+    }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      border-bottom: 1px solid #f0f9ff;
+      padding-bottom: 12px;
+    }
+    .score-header h3 { font-size: 17px; color: #0369a1; }
+    .overall-badge { font-size: 24px; font-weight: 800; color: #0284c7; }
+    .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .score-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .score-box .label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+    .score-box .val { font-size: 20px; font-weight: 700; color: #0f172a; }
+
+    .transcript-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 14px;
+    }
+    .word-matched { background-color: #dcfce7; color: #15803d; padding: 2px 4px; border-radius: 4px; font-weight: 600; }
+    .word-missed { background-color: #fee2e2; color: #b91c1c; padding: 2px 4px; border-radius: 4px; text-decoration: underline dotted #dc2626; }
+    .analysis-details { font-size: 13px; color: #475569; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Repeat Sentence &bull; Multi-Accent</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="pte-container">
+      <div class="pte-header">
+        <div>
+          <h2>Repeat Sentence</h2>
+          <p>선택한 국가의 원어민 음성을 듣고 15초 내에 따라 말하세요.</p>
+        </div>
+        <select id="question-selector" class="question-select">
+          <option value="0">문장 1 (도서관 주말 휴관)</option>
+          <option value="1">문장 2 (과제 제출 마감)</option>
+          <option value="2">문장 3 (캠퍼스 셔틀 버스)</option>
+          <option value="3">문장 4 (국제 학생 교환)</option>
+        </select>
+      </div>
+
+      <div class="controls-row">
+        <span style="font-size: 13px; font-weight: 700; color: #475569;">원어민 억양 설정:</span>
+        <div class="accent-group">
+          <button class="btn-accent" data-accent="en-US">🇺🇸 US (미국)</button>
+          <button class="btn-accent" data-accent="en-GB">🇬🇧 UK (영국)</button>
+          <button class="btn-accent" data-accent="en-AU">🇦🇺 AU (호주)</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
+        <button type="button" id="btn-initial-hint" style="font-size: 12px; font-weight: 700; color: #854d0e; background: #fef9c3; border: 1px solid #fde047; padding: 5px 12px; border-radius: 6px; cursor: pointer;">💡 첫 글자 이니셜 힌트 보기</button>
+      </div>
+      <div id="initial-hint-display" style="display: none; background: #fefce8; border: 1px dashed #facc15; border-radius: 8px; padding: 12px 16px; font-size: 15px; font-weight: 600; color: #713f12; margin-bottom: 14px; letter-spacing: 1px;"></div>
+      <div class="audio-status-box" id="audio-box">
+        <div class="audio-anim" id="audio-icon">🎧</div>
+        <div id="audio-desc">[시험 시작] 버튼을 누르면 선택한 억양으로 문장이 재생됩니다.</div>
+      </div>
+
+      <div class="status-panel">
+        <div class="status-title">
+          <span id="status-label">상태: 대기 중</span>
+          <span id="timer-label">00s</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-start" id="start-btn">시험 시작</button>
+        <button class="btn btn-stop" id="finish-btn" style="display: none;">말하기 완료 (Next)</button>
+      </div>
+
+      <audio id="audio-player" class="audio-playback" controls></audio>
+
+      <div class="score-card" id="score-card">
+        <div class="score-header">
+          <h3>📊 Repeat Sentence 채점 결과</h3>
+          <div class="overall-badge" id="overall-score">-- / 90</div>
+        </div>
+        <div class="score-grid">
+          <div class="score-box"><div class="label">내용 일치도 (Content)</div><div class="val" id="content-score">--</div></div>
+          <div class="score-box"><div class="label">유창성 (Fluency)</div><div class="val" id="fluency-score">--</div></div>
+          <div class="score-box"><div class="label">발음 정확도 (Pron)</div><div class="val" id="pron-score">--</div></div>
+        </div>
+        <div class="transcript-box" id="highlighted-transcript"></div>
+        <div class="analysis-details" id="analysis-details"></div>
+        <div style="margin-top: 14px; text-align: center;">
+          <button type="button" class="btn btn-outline" style="font-size: 13px; padding: 8px 16px; border: 1px solid #bae6fd; background: #f0f9ff; color: #0284c7;" onclick="playShadowingCompare(SENTENCES[questionSelector.value], 'audio-player')">🎧 원어민 발음 ➔ 내 목소리 1:1 연속 비교 듣기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio-engine.js"></script>
+  <script src="questions.js"></script>
+  <script>
+    const RS_ITEMS = PTE_QUESTION_BANK.getAll('rs');
+    const SENTENCES = RS_ITEMS.map(q => q.text);
+    const RECORDING_LIMIT = 15;
+    let timerInterval = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recognition = null;
+    let spokenTranscript = "";
+    let confidenceSum = 0;
+    let confidenceCount = 0;
+    let recordingStartTime = 0;
+
+    const questionSelector = document.getElementById('question-selector');
+    const audioIcon = document.getElementById('audio-icon');
+    const audioDesc = document.getElementById('audio-desc');
+    const statusLabel = document.getElementById('status-label');
+    const timerLabel = document.getElementById('timer-label');
+    const progressBar = document.getElementById('progress-bar');
+    const startBtn = document.getElementById('start-btn');
+    const finishBtn = document.getElementById('finish-btn');
+    const audioPlayer = document.getElementById('audio-player');
+    const scoreCard = document.getElementById('score-card');
+    const highlightedTranscript = document.getElementById('highlighted-transcript');
+    const analysisDetails = document.getElementById('analysis-details');
+
+    function initAccentButtons() {
+      document.querySelectorAll('.btn-accent').forEach(btn => {
+        if (btn.dataset.accent === PTE_AUDIO.currentAccent) btn.classList.add('active');
+        else btn.classList.remove('active');
+        btn.onclick = (e) => {
+          document.querySelectorAll('.btn-accent').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          PTE_AUDIO.setAccent(e.target.dataset.accent);
+        };
+      });
+    }
+    initAccentButtons();
+
+    const qBar = initDynamicQuestionBar('rs', questionSelector, () => {
+      resetTest();
+    });
+
+    function resetTest() {
+      clearInterval(timerInterval);
+      window.speechSynthesis.cancel();
+      if (recognition) { try { recognition.stop(); } catch(e){} }
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+      audioIcon.innerText = "🎧";
+      audioDesc.innerText = "[시험 시작] 버튼을 누르면 선택한 억양으로 문장이 재생됩니다.";
+      statusLabel.innerText = "상태: 대기 중";
+      timerLabel.innerText = "00s";
+      progressBar.style.width = "0%";
+      startBtn.style.display = 'inline-block';
+      startBtn.disabled = false;
+      finishBtn.style.display = 'none';
+      audioPlayer.style.display = 'none';
+      scoreCard.style.display = 'none';
+    }
+
+    async function initAudioAndSTT() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        audioPlayer.src = URL.createObjectURL(audioBlob);
+        audioPlayer.style.display = 'block';
+      };
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.continuous = true;
+        recognition.interimResults = false;
+
+        spokenTranscript = "";
+        confidenceSum = 0;
+        confidenceCount = 0;
+
+        recognition.onresult = (event) => {
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              spokenTranscript += " " + event.results[i][0].transcript;
+              if (event.results[i][0].confidence) {
+                confidenceSum += event.results[i][0].confidence;
+                confidenceCount++;
+              }
+            }
+          }
+        };
+      }
+    }
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        await initAudioAndSTT();
+      } catch (err) {
+        alert("마이크 권한을 허용해야 채점이 진행됩니다.");
+        return;
+      }
+
+      startBtn.disabled = true;
+      audioPlayer.style.display = 'none';
+      scoreCard.style.display = 'none';
+
+      const targetSentence = SENTENCES[questionSelector.value];
+      const accentInfo = PTE_AUDIO.accents[PTE_AUDIO.currentAccent].label;
+      audioIcon.innerText = "🔊";
+      audioDesc.innerText = `${accentInfo} 억양 청취 중... 집중하세요!`;
+      statusLabel.innerText = "상태: 음성 청취 중 (Playing...)";
+      timerLabel.innerText = "Playing...";
+      progressBar.style.width = "0%";
+      progressBar.style.backgroundColor = "#64748b";
+
+      PTE_AUDIO.speak(targetSentence, () => {
+        audioIcon.innerText = "🎙️";
+        audioDesc.innerText = "음성이 끝났습니다! 지금 바로 문장을 따라 말하세요.";
+        startRecordingFlow();
+      });
+    });
+
+    function startRecordingFlow() {
+      mediaRecorder.start();
+      if (recognition) { try { recognition.start(); } catch(e){} }
+
+      startBtn.style.display = 'none';
+      finishBtn.style.display = 'inline-block';
+      progressBar.style.width = "0%";
+      progressBar.style.backgroundColor = "#0284c7";
+
+      recordingStartTime = Date.now();
+      let elapsed = 0;
+      statusLabel.innerText = "상태: ● 녹음 및 인식 진행 중 (Recording...)";
+      timerLabel.innerText = `0s / ${RECORDING_LIMIT}s`;
+
+      timerInterval = setInterval(() => {
+        elapsed++;
+        timerLabel.innerText = `${elapsed}s / ${RECORDING_LIMIT}s`;
+        progressBar.style.width = `${(elapsed / RECORDING_LIMIT) * 100}%`;
+        if (elapsed >= RECORDING_LIMIT) {
+          clearInterval(timerInterval);
+          stopAndEvaluate();
+        }
+      }, 1000);
+    }
+
+    function stopAndEvaluate() {
+      clearInterval(timerInterval);
+      const actualDuration = Math.max(1, (Date.now() - recordingStartTime) / 1000);
+
+      if (recognition) { try { recognition.stop(); } catch(e){} }
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+
+      finishBtn.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      startBtn.innerText = "다시 응시하기";
+      startBtn.disabled = false;
+
+      statusLabel.innerText = "상태: 채점 완료";
+      timerLabel.innerText = "제출됨";
+      progressBar.style.width = "100%";
+      progressBar.style.backgroundColor = "#10b981";
+
+      setTimeout(() => evaluateSentence(actualDuration), 600);
+    }
+
+    finishBtn.addEventListener('click', stopAndEvaluate);
+
+    function evaluateSentence(actualDuration) {
+      const targetText = SENTENCES[questionSelector.value];
+      const targetWords = targetText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase().split(/\s+/).filter(w => w.length > 0);
+      const userWords = spokenTranscript.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase().split(/\s+/).filter(w => w.length > 0);
+
+      let matchedCount = 0;
+      const userWordPool = [...userWords];
+      targetWords.forEach(w => {
+        const idx = userWordPool.indexOf(w);
+        if (idx !== -1) {
+          matchedCount++;
+          userWordPool.splice(idx, 1);
+        } else {
+          saveMistake(w, 'RS', targetText);
+        }
+      });
+
+      const matchRatio = targetWords.length > 0 ? (matchedCount / targetWords.length) : 0;
+      const contentScore = Math.round(10 + matchRatio * 80);
+
+      const wpm = Math.round((userWords.length / actualDuration) * 60);
+      let fluencyScore = 10;
+      if (wpm >= 110 && wpm <= 160) fluencyScore = 85 + Math.min(5, Math.round(matchRatio * 5));
+      else if (wpm >= 80 && wpm < 110) fluencyScore = Math.round(60 + ((wpm - 80) / 30) * 25);
+      else fluencyScore = Math.max(10, Math.round((wpm / 80) * 60));
+
+      const avgConf = confidenceCount > 0 ? (confidenceSum / confidenceCount) : 0.75;
+      const pronScore = Math.round(10 + Math.min(1.0, avgConf * 1.05) * 80);
+      const overall = Math.round(contentScore * 0.5 + fluencyScore * 0.3 + pronScore * 0.2);
+
+      const rawTokens = targetText.split(" ");
+      const highlighted = rawTokens.map(token => {
+        const clean = token.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").toLowerCase();
+        if (userWords.includes(clean)) return `<span class="word-matched">${token}</span>`;
+        else return `<span class="word-missed">${token}</span>`;
+      }).join(" ");
+
+      highlightedTranscript.innerHTML = `<b>원문 대조:</b> ${highlighted}`;
+      document.getElementById('overall-score').innerText = `${overall} / 90`;
+      document.getElementById('content-score').innerText = `${contentScore}점`;
+      document.getElementById('fluency-score').innerText = `${fluencyScore}점`;
+      document.getElementById('pron-score').innerText = `${pronScore}점`;
+
+      analysisDetails.innerHTML = `
+        <b>단어 복기율:</b> ${matchedCount} / ${targetWords.length} 단어 (${Math.round(matchRatio * 100)}%)<br>
+        <b>발화 속도:</b> ${wpm} WPM (소요 시간: ${actualDuration.toFixed(1)}초, 단어 수: ${userWords.length}개)<br>
+        <b>청취 억양:</b> ${PTE_AUDIO.accents[PTE_AUDIO.currentAccent].label}
+      `;
+
+      scoreCard.style.display = 'block';
+      setTimeout(() => qBar.refreshOptions(), 100);
+
+      const curItem = RS_ITEMS[questionSelector.value] || {};
+      savePteResult({
+        questionId: curItem.id,
+        type: 'RS',
+        title: targetText.substring(0, 25) + '...',
+        overall: overall,
+        content: contentScore,
+        fluency: fluencyScore,
+        pron: pronScore,
+        wpm: wpm
+      });
+    }
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

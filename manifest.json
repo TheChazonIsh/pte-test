@@ -1,0 +1,22 @@
+{
+  "name": "PTE Master AI Practice",
+  "short_name": "PTE Master",
+  "description": "PTE Speaking, Writing, Reading, Listening AI Simulator",
+  "start_url": "main.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3413/3413535.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3413/3413535.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

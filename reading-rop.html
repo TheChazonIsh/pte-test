@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Re-order Paragraphs Simulator (Pair-Based Scoring)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #0d9488; font-weight: 700; font-size: 14px; }
+    .badge { background: #ccfbf1; color: #0f766e; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .pte-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 860px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-top: 6px solid #0d9488;
+    }
+    .pte-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .pte-header h2 { font-size: 20px; color: #0f172a; }
+    .pte-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .question-select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    /* ROP 2단 인터랙티브 레이아웃 */
+    .rop-workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 700px) {
+      .rop-workspace { grid-template-columns: 1fr; }
+    }
+
+    .column-panel {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+    }
+    .column-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .paragraph-item {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1e293b;
+      cursor: grab;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      transition: all 0.15s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .paragraph-item:hover { border-color: #0d9488; transform: translateY(-1px); }
+    .paragraph-item.dragging { opacity: 0.4; }
+    .paragraph-item.correct-pair { border-left: 4px solid #10b981; background: #f0fdf4; }
+
+    .item-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .btn-move {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #475569;
+    }
+    .btn-move:hover { background: #e2e8f0; color: #0d9488; }
+
+    .btn-group { display: flex; gap: 12px; }
+    .btn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-submit { background-color: #0d9488; color: white; }
+    .btn-submit:hover { background-color: #0f766e; }
+    .btn-reset { background-color: #64748b; color: white; }
+    .btn-reset:hover { background-color: #475569; }
+
+    /* 채점 리포트 카드 */
+    .score-card {
+      display: none;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #99f6e4;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
+    }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #f0fdfa;
+      padding-bottom: 12px;
+    }
+    .score-header h3 { font-size: 17px; color: #0f766e; }
+    .overall-badge { font-size: 24px; font-weight: 800; color: #0d9488; }
+
+    .pair-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 16px 0;
+    }
+    .pair-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .pair-hit { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .pair-miss { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .explanation-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Reading &bull; Re-order Paragraphs</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="pte-container">
+      <div class="pte-header">
+        <div>
+          <h2>Re-order Paragraphs</h2>
+          <p>왼쪽의 뒤섞인 문단들을 논리적 순서에 맞게 오른쪽 상자로 이동시켜 올바른 글을 완성하세요.</p>
+        </div>
+        <select id="question-selector" class="question-select"></select>
+      </div>
+
+      <div class="rop-workspace">
+        <div class="column-panel" id="source-column">
+          <div class="column-title">
+            <span>뒤섞인 문단 목록 (Source)</span>
+            <span style="font-size: 11px; font-weight: 600; color: #94a3b8;">클릭하여 오른쪽으로 이동</span>
+          </div>
+          <div id="source-items"></div>
+        </div>
+
+        <div class="column-panel" id="target-column">
+          <div class="column-title">
+            <span>정렬된 순서 (Target Order)</span>
+            <span style="font-size: 11px; font-weight: 600; color: #0d9488;">[▲/▼] 버튼으로 순서 조정</span>
+          </div>
+          <div id="target-items"></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-submit" id="submit-btn">순서 제출 및 쌍(Pair) 채점</button>
+        <button class="btn btn-reset" id="reset-btn" style="display: none;">다시 풀기</button>
+      </div>
+
+      <!-- 채점 리포트 카드 -->
+      <div class="score-card" id="score-card">
+        <div class="score-header">
+          <h3>📊 Re-order Paragraphs 인접 쌍(Pair) 채점 결과</h3>
+          <div class="overall-badge" id="overall-badge">-- / 90</div>
+        </div>
+
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px;" id="pair-score-summary"></div>
+        <div class="pair-badge-row" id="pair-badges"></div>
+        <div class="explanation-box" id="explanation-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio-engine.js"></script>
+  <script src="questions.js"></script>
+  <script>
+    let currentProblem = null;
+    let sourceList = [];
+    let targetList = [];
+
+    const questionSelector = document.getElementById('question-selector');
+    const sourceItemsEl = document.getElementById('source-items');
+    const targetItemsEl = document.getElementById('target-items');
+    const submitBtn = document.getElementById('submit-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const scoreCard = document.getElementById('score-card');
+    const overallBadge = document.getElementById('overall-badge');
+    const pairScoreSummary = document.getElementById('pair-score-summary');
+    const pairBadges = document.getElementById('pair-badges');
+    const explanationBox = document.getElementById('explanation-box');
+
+    function loadProblem(item) {
+      currentProblem = item;
+      scoreCard.style.display = 'none';
+      submitBtn.style.display = 'inline-block';
+      resetBtn.style.display = 'none';
+
+      // 셔플된 복사본
+      sourceList = [...item.paragraphs].sort(() => Math.random() - 0.5);
+      targetList = [];
+      renderColumns();
+    }
+
+    function renderColumns() {
+      // Source Column
+      if (sourceList.length === 0) {
+        sourceItemsEl.innerHTML = '<p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 40px 0;">모든 문단이 오른쪽으로 이동되었습니다.</p>';
+      } else {
+        sourceItemsEl.innerHTML = sourceList.map((p, idx) => `
+          <div class="paragraph-item" onclick="moveToTarget(${idx})">
+            <span><b>[${p.label}]</b> ${p.text}</span>
+            <span style="color: #0d9488; font-weight: bold;">+</span>
+          </div>
+        `).join('');
+      }
+
+      // Target Column
+      if (targetList.length === 0) {
+        targetItemsEl.innerHTML = '<p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 40px 0;">왼쪽 문단을 클릭해 이곳으로 배치하세요.</p>';
+      } else {
+        targetItemsEl.innerHTML = targetList.map((p, idx) => `
+          <div class="paragraph-item">
+            <span><b>${idx + 1}. [${p.label}]</b> ${p.text}</span>
+            <div class="item-controls">
+              <button type="button" class="btn-move" onclick="moveUp(${idx})" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="btn-move" onclick="moveDown(${idx})" ${idx === targetList.length - 1 ? 'disabled' : ''}>▼</button>
+              <button type="button" class="btn-move" onclick="moveToSource(${idx})" style="color: #dc2626;">✕</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    window.moveToTarget = function(idx) {
+      targetList.push(sourceList[idx]);
+      sourceList.splice(idx, 1);
+      renderColumns();
+    };
+
+    window.moveToSource = function(idx) {
+      sourceList.push(targetList[idx]);
+      targetList.splice(idx, 1);
+      renderColumns();
+    };
+
+    window.moveUp = function(idx) {
+      if (idx > 0) {
+        const temp = targetList[idx];
+        targetList[idx] = targetList[idx - 1];
+        targetList[idx - 1] = temp;
+        renderColumns();
+      }
+    };
+
+    window.moveDown = function(idx) {
+      if (idx < targetList.length - 1) {
+        const temp = targetList[idx];
+        targetList[idx] = targetList[idx + 1];
+        targetList[idx + 1] = temp;
+        renderColumns();
+      }
+    };
+
+    submitBtn.addEventListener('click', () => {
+      if (sourceList.length > 0) {
+        alert('모든 문단을 오른쪽 상자로 이동시켜 순서를 완성해 주세요!');
+        return;
+      }
+
+      const totalParagraphs = currentProblem.paragraphs.length;
+      const totalPairs = totalParagraphs - 1; // 인접한 쌍(Adjacent Pair) 개수
+      const correctOrder = currentProblem.correctOrder; // e.g. ["B", "D", "A", "C"]
+
+      // 정답 인접 쌍 리스트 생성
+      const correctPairs = [];
+      for (let i = 0; i < correctOrder.length - 1; i++) {
+        correctPairs.push(`${correctOrder[i]}-${correctOrder[i+1]}`);
+      }
+
+      // 사용자가 배치한 인접 쌍 리스트 생성
+      const userOrder = targetList.map(p => p.label);
+      const userPairs = [];
+      for (let i = 0; i < userOrder.length - 1; i++) {
+        userPairs.push(`${userOrder[i]}-${userOrder[i+1]}`);
+      }
+
+      // 쌍 일치 여부 판정 (PTE 공식 피어슨 채점 방식)
+      let hitPairs = 0;
+      let badgeHtml = '';
+
+      correctPairs.forEach(cp => {
+        if (userPairs.includes(cp)) {
+          hitPairs++;
+          badgeHtml += `<span class="pair-badge pair-hit">✔ 정답 쌍 [${cp}] 적중 (+1점)</span>`;
+        } else {
+          badgeHtml += `<span class="pair-badge pair-miss">✖ 놓친 쌍 [${cp}] (0점)</span>`;
+        }
+      });
+
+      const matchRatio = hitPairs / totalPairs;
+      const overall = Math.round(10 + matchRatio * 80);
+
+      overallBadge.innerText = `${overall} / 90`;
+      pairScoreSummary.innerHTML = `인접 쌍 점수: <b>${hitPairs} / ${totalPairs}점</b> (내 순서: ${userOrder.join(' &rarr; ')})<br>정답 순서: <b>${correctOrder.join(' &rarr; ')}</b>`;
+      pairBadges.innerHTML = badgeHtml;
+
+      explanationBox.innerHTML = `
+        <b>💡 문맥 단서 및 논리 연결 해설:</b><br>
+        ${currentProblem.explanation}
+      `;
+
+      scoreCard.style.display = 'block';
+      submitBtn.style.display = 'none';
+      resetBtn.style.display = 'inline-block';
+
+      savePteResult({
+        questionId: currentProblem.id,
+        type: 'ROP',
+        title: 'Re-order: ' + currentProblem.title,
+        overall: overall,
+        content: overall,
+        fluency: 90,
+        pron: 90,
+        wpm: 0
+      });
+    });
+
+    resetBtn.addEventListener('click', () => {
+      loadProblem(currentProblem);
+    });
+
+    const qBar = initDynamicQuestionBar('rop', questionSelector, (idx, item) => {
+      loadProblem(item);
+    });
+
+    loadProblem(qBar.getCurrentItem() || PTE_QUESTION_BANK.getAll('rop')[0]);
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>

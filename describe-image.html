@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTE Describe Image Practice with AI Keyword Scoring</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-link { text-decoration: none; color: #6b21a8; font-weight: 700; font-size: 14px; }
+    .badge { background: #faf5ff; color: #6b21a8; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 700; }
+
+    .wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .pte-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 720px;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-top: 6px solid #6b21a8;
+    }
+    .pte-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .pte-header h2 { font-size: 20px; color: #0f172a; }
+    .pte-header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+
+    .question-select {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    .image-container {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .chart-title { font-weight: bold; font-size: 16px; color: #1e293b; margin-bottom: 16px; }
+    .bar-chart {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 180px;
+      padding-top: 20px;
+      border-bottom: 2px solid #94a3b8;
+    }
+    .bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 60px; }
+    .bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s ease; }
+    .bar-label { font-size: 13px; color: #475569; font-weight: 500; }
+    .bar-val { font-size: 12px; color: #64748b; }
+
+    .status-panel {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 24px;
+    }
+    .status-title {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 15px;
+      color: #334155;
+      margin-bottom: 10px;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 14px;
+      background-color: #e2e8f0;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .progress-bar { width: 0%; height: 100%; background-color: #6b21a8; transition: width 1s linear; }
+
+    .btn-group { display: flex; gap: 12px; }
+    .btn {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-start { background-color: #6b21a8; color: white; }
+    .btn-start:hover { background-color: #581c87; }
+    .btn-skip { background-color: #f59e0b; color: white; }
+    .btn-skip:hover { background-color: #d97706; }
+    .btn-stop { background-color: #ef4444; color: white; }
+    .btn-stop:hover { background-color: #dc2626; }
+    .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
+    .audio-playback { margin-top: 20px; width: 100%; display: none; }
+
+    .score-card {
+      display: none;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #e9d5ff;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(107, 33, 168, 0.08);
+    }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      border-bottom: 1px solid #faf5ff;
+      padding-bottom: 12px;
+    }
+    .score-header h3 { font-size: 17px; color: #6b21a8; }
+    .overall-badge { font-size: 24px; font-weight: 800; color: #6b21a8; }
+    .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .score-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .score-box .label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+    .score-box .val { font-size: 20px; font-weight: 700; color: #0f172a; }
+
+    .keyword-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .keyword-pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; }
+    .kw-hit { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .kw-miss { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .template-box {
+      margin-top: 14px;
+      padding: 14px;
+      background: #faf5ff;
+      border: 1px solid #e9d5ff;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #581c87;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="main.html" class="back-link">&larr; 메인 대시보드로 이동</a>
+    <span class="badge">Describe Image &bull; AI Keyword Scoring Active</span>
+  </div>
+
+  <div class="wrapper">
+    <div class="pte-container">
+      <div class="pte-header">
+        <div>
+          <h2>Describe Image</h2>
+          <p>도표를 25초간 분석 후 40초 내에 핵심 키워드를 포함하여 묘사하세요.</p>
+        </div>
+        <select id="question-selector" class="question-select">
+          <option value="0">도표 1 (에너지 소비량)</option>
+          <option value="1">도표 2 (스마트폰 점유율)</option>
+          <option value="2">도표 3 (재생에너지 비율)</option>
+        </select>
+      </div>
+
+      <div class="image-container" id="chart-display"></div>
+
+      <div class="status-panel">
+        <div class="status-title">
+          <span id="status-label">상태: [시험 시작]을 눌러주세요</span>
+          <span id="timer-label">00s</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-start" id="start-btn">시험 시작 (준비 25초)</button>
+        <button class="btn btn-skip" id="skip-btn" style="display: none;">준비 건너뛰기 &rarr;</button>
+        <button class="btn btn-stop" id="finish-btn" style="display: none;">답변 완료 (Next)</button>
+      </div>
+
+      <audio id="audio-player" class="audio-playback" controls></audio>
+
+      <div class="score-card" id="score-card">
+        <div class="score-header">
+          <h3>📊 Describe Image 키워드 채점 리포트</h3>
+          <div class="overall-badge" id="overall-score">-- / 90</div>
+        </div>
+        <div class="score-grid">
+          <div class="score-box"><div class="label">내용 키워드 (Content)</div><div class="val" id="content-score">--</div></div>
+          <div class="score-box"><div class="label">유창성 (Fluency)</div><div class="val" id="fluency-score">--</div></div>
+          <div class="score-box"><div class="label">발음 (Pronunciation)</div><div class="val" id="pron-score">--</div></div>
+        </div>
+
+        <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">핵심 키워드 판정:</div>
+        <div class="keyword-list" id="keyword-pills"></div>
+        <div style="font-size: 13px; color: #475569; margin-bottom: 12px;" id="analysis-summary"></div>
+        <div class="template-box" id="template-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio-engine.js"></script>
+  <script src="questions.js"></script>
+  <script>
+    const PROBLEMS = PTE_QUESTION_BANK.getAll('di');
+    const PREPARATION_TIME = 25;
+    const RECORDING_TIME = 40;
+
+    let timerInterval = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recognition = null;
+    let spokenTranscript = "";
+    let confidenceSum = 0;
+    let confidenceCount = 0;
+    let recordingStartTime = 0;
+
+    const questionSelector = document.getElementById('question-selector');
+    const chartDisplay = document.getElementById('chart-display');
+    const statusLabel = document.getElementById('status-label');
+    const timerLabel = document.getElementById('timer-label');
+    const progressBar = document.getElementById('progress-bar');
+    const startBtn = document.getElementById('start-btn');
+    const skipBtn = document.getElementById('skip-btn');
+    const finishBtn = document.getElementById('finish-btn');
+    const audioPlayer = document.getElementById('audio-player');
+    const scoreCard = document.getElementById('score-card');
+    const keywordPills = document.getElementById('keyword-pills');
+    const analysisSummary = document.getElementById('analysis-summary');
+    const templateBox = document.getElementById('template-box');
+
+    function renderChart(index) {
+      const p = PROBLEMS[index];
+      let barsHtml = p.bars.map(b => `
+        <div class="bar-group">
+          <span class="bar-val">${b.val}</span>
+          <div class="bar" style="height: ${b.h}; background: ${b.color};"></div>
+          <span class="bar-label">${b.label}</span>
+        </div>
+      `).join("");
+
+      chartDisplay.innerHTML = `<div class="chart-title">${p.title}</div><div class="bar-chart">${barsHtml}</div>`;
+    }
+
+    renderChart(0);
+    const qBar = initDynamicQuestionBar('di', questionSelector, (idx) => {
+      resetTest();
+      renderChart(idx);
+    });
+
+    function resetTest() {
+      clearInterval(timerInterval);
+      if (recognition) { try { recognition.stop(); } catch(e){} }
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+      statusLabel.innerText = "상태: [시험 시작]을 눌러주세요";
+      timerLabel.innerText = "00s";
+      progressBar.style.width = "0%";
+      startBtn.style.display = 'inline-block';
+      startBtn.disabled = false;
+      skipBtn.style.display = 'none';
+      finishBtn.style.display = 'none';
+      audioPlayer.style.display = 'none';
+      scoreCard.style.display = 'none';
+    }
+
+    async function initAudioAndSTT() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        audioPlayer.src = URL.createObjectURL(audioBlob);
+        audioPlayer.style.display = 'block';
+      };
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.continuous = true;
+        recognition.interimResults = false;
+
+        spokenTranscript = "";
+        confidenceSum = 0;
+        confidenceCount = 0;
+
+        recognition.onresult = (event) => {
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              spokenTranscript += " " + event.results[i][0].transcript;
+              if (event.results[i][0].confidence) {
+                confidenceSum += event.results[i][0].confidence;
+                confidenceCount++;
+              }
+            }
+          }
+        };
+      }
+    }
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        await initAudioAndSTT();
+      } catch (err) {
+        alert("마이크 사용 권한을 허용해야 채점이 진행됩니다.");
+        return;
+      }
+
+      startBtn.style.display = 'none';
+      skipBtn.style.display = 'inline-block';
+      audioPlayer.style.display = 'none';
+      scoreCard.style.display = 'none';
+      progressBar.style.backgroundColor = "#f59e0b";
+
+      let remaining = PREPARATION_TIME;
+      statusLabel.innerText = "상태: 도표 분석 시간 (Beginning in...)";
+      timerLabel.innerText = `${remaining}s`;
+      progressBar.style.width = "0%";
+
+      timerInterval = setInterval(() => {
+        remaining--;
+        timerLabel.innerText = `${remaining}s`;
+        progressBar.style.width = `${((PREPARATION_TIME - remaining) / PREPARATION_TIME) * 100}%`;
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          startRecordingFlow();
+        }
+      }, 1000);
+    });
+
+    skipBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      startRecordingFlow();
+    });
+
+    function startRecordingFlow() {
+      PTE_AUDIO.playBeep();
+      skipBtn.style.display = 'none';
+      finishBtn.style.display = 'inline-block';
+      progressBar.style.width = "0%";
+      progressBar.style.backgroundColor = "#6b21a8";
+
+      recordingStartTime = Date.now();
+      mediaRecorder.start();
+      if (recognition) { try { recognition.start(); } catch(e){} }
+
+      let elapsed = 0;
+      statusLabel.innerText = "상태: ● 녹음 및 키워드 인식 진행 중 (Recording...)";
+      timerLabel.innerText = `0s / ${RECORDING_TIME}s`;
+
+      timerInterval = setInterval(() => {
+        elapsed++;
+        timerLabel.innerText = `${elapsed}s / ${RECORDING_TIME}s`;
+        progressBar.style.width = `${(elapsed / RECORDING_TIME) * 100}%`;
+        if (elapsed >= RECORDING_TIME) {
+          clearInterval(timerInterval);
+          stopAndEvaluate();
+        }
+      }, 1000);
+    }
+
+    function stopAndEvaluate() {
+      clearInterval(timerInterval);
+      const actualDuration = Math.max(1, (Date.now() - recordingStartTime) / 1000);
+
+      if (recognition) { try { recognition.stop(); } catch(e){} }
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+
+      finishBtn.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      startBtn.innerText = "다시 응시하기";
+      startBtn.disabled = false;
+
+      statusLabel.innerText = "상태: 채점 완료";
+      timerLabel.innerText = "제출됨";
+      progressBar.style.width = "100%";
+      progressBar.style.backgroundColor = "#10b981";
+
+      setTimeout(() => evaluateImage(actualDuration), 600);
+    }
+
+    finishBtn.addEventListener('click', stopAndEvaluate);
+
+    function evaluateImage(actualDuration) {
+      const p = PROBLEMS[questionSelector.value];
+      const targetKeywords = p.keywords;
+      const lowerTranscript = spokenTranscript.toLowerCase();
+
+      let hitCount = 0;
+      let pillsHtml = "";
+
+      targetKeywords.forEach(kw => {
+        if (lowerTranscript.includes(kw.toLowerCase())) {
+          hitCount++;
+          pillsHtml += `<span class="keyword-pill kw-hit">✔ ${kw}</span>`;
+        } else {
+          pillsHtml += `<span class="keyword-pill kw-miss">✖ ${kw}</span>`;
+        }
+      });
+
+      keywordPills.innerHTML = pillsHtml;
+
+      const hitRatio = hitCount / targetKeywords.length;
+      const contentScore = Math.round(10 + hitRatio * 80);
+
+      const userWords = spokenTranscript.split(/\s+/).filter(w => w.length > 0);
+      const wpm = Math.round((userWords.length / actualDuration) * 60);
+
+      let fluencyScore = 10;
+      if (wpm >= 110 && wpm <= 165) fluencyScore = 85 + Math.min(5, Math.round(hitRatio * 5));
+      else if (wpm >= 80 && wpm < 110) fluencyScore = Math.round(60 + ((wpm - 80) / 30) * 25);
+      else fluencyScore = Math.max(10, Math.round((wpm / 80) * 60));
+
+      const avgConf = confidenceCount > 0 ? (confidenceSum / confidenceCount) : 0.75;
+      const pronScore = Math.round(10 + Math.min(1.0, avgConf * 1.05) * 80);
+      const overall = Math.round(contentScore * 0.4 + fluencyScore * 0.35 + pronScore * 0.25);
+
+      document.getElementById('overall-score').innerText = `${overall} / 90`;
+      document.getElementById('content-score').innerText = `${contentScore}점`;
+      document.getElementById('fluency-score').innerText = `${fluencyScore}점`;
+      document.getElementById('pron-score').innerText = `${pronScore}점`;
+
+      analysisSummary.innerHTML = `
+        <b>언급 키워드:</b> ${hitCount} / ${targetKeywords.length}개 (${Math.round(hitRatio * 100)}%)<br>
+        <b>발화 속도:</b> ${wpm} WPM (소요 시간: ${actualDuration.toFixed(1)}초, 말한 단어: ${userWords.length}개)<br>
+        <b>인식된 음성:</b> "${spokenTranscript.trim() || '(인식된 음성 없음)'}"
+      `;
+
+      templateBox.innerHTML = `💡 <b>모범 고득점 템플릿:</b><br>${p.template}`;
+      scoreCard.style.display = 'block';
+      setTimeout(() => qBar.refreshOptions(), 100);
+
+      savePteResult({
+        questionId: p.id,
+        type: 'DI',
+        title: p.title,
+        overall: overall,
+        content: contentScore,
+        fluency: fluencyScore,
+        pron: pronScore,
+        wpm: wpm
+      });
+    }
+  </script>
+  <script src="ui-enhancer.js"></script>
+  <script src="cloud-ai-plugin.js"></script>
+</body>
+</html>
