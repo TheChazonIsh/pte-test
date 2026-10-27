@@ -240,7 +240,8 @@
     const bar = document.createElement('div');
     bar.className = 'ux-control-bar';
     bar.innerHTML = `
-      <span style="color: #64748b; font-weight: 700; margin-right: auto;">✨ v5.0 UX/UI 컨트롤러</span>
+      <span style="color: #64748b; font-weight: 700; margin-right: auto;">✨ v11.0 스마트 컨트롤러</span>
+      <button type="button" class="ux-btn" id="ux-btn-mic-test" style="border-color:#10b981; color:#047857; background:#ecfdf5;" title="스마트폰·PC 마이크 권한 즉시 깨우기 및 음성인식 점검">🎙️ 마이크 원클릭 점검</button>
       <button type="button" class="ux-btn" id="ux-btn-3sec" title="스피킹 녹음 시작 후 3초 무음 시 시험처럼 마이크 자동 종료">⏱️ 3초 무음 룰 OFF</button>
       <button type="button" class="ux-btn" id="ux-btn-skin" title="실제 피어슨 시험장 화면 스타일로 전환">🖥️ 실전 시험장 스킨</button>
       <button type="button" class="ux-btn" id="ux-btn-dark" title="눈 피로 방지 다크 모드 전환">🌙 다크 모드</button>
@@ -251,6 +252,35 @@
       </div>
     `;
     header.insertAdjacentElement('afterend', bar);
+
+    const btnMicTest = document.getElementById('ux-btn-mic-test');
+    if (btnMicTest) {
+      btnMicTest.onclick = async () => {
+        btnMicTest.innerText = '⏳ 마이크 확인 중...';
+        try {
+          if (window.AudioContext || window.webkitAudioContext) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') await ctx.resume();
+            ctx.close();
+          }
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(t => t.stop());
+          const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+          const mime = (typeof PTE_AUDIO !== 'undefined' && PTE_AUDIO.getSupportedAudioMimeType)
+            ? (PTE_AUDIO.getSupportedAudioMimeType() || 'audio/mp4 (기본)')
+            : '정상 지원';
+          btnMicTest.innerText = '🟢 마이크 정상 연결됨';
+          btnMicTest.style.background = '#059669';
+          btnMicTest.style.color = '#ffffff';
+          alert(`✅ 스마트폰/PC 마이크 연결 및 권한 해제 완료!\n\n• 마이크 입력 권한: 정상 허용됨\n• 내 목소리 녹음 포맷: ${mime}\n• 실시간 AI 음성인식 엔진: ${hasSR ? '정상 지원됨' : '브라우저 제한 (크롬/사파리 권장)'}\n\n이제 스피킹 문제를 바로 시작하실 수 있습니다!`);
+        } catch (err) {
+          btnMicTest.innerText = '🔴 마이크 권한 필요';
+          btnMicTest.style.background = '#fef2f2';
+          btnMicTest.style.color = '#dc2626';
+          alert('⚠️ 마이크 권한이 차단되어 있습니다.\n\n• 아이폰(Safari): 아이폰 [설정] > [앱] > [Safari] > [마이크]를 [허용]으로 변경 후 새로고침하세요.\n• 안드로이드(Chrome): 주소창 왼쪽 설정 아이콘 > [권한] > [마이크]를 [허용]으로 변경하세요.');
+        }
+      };
+    }
 
     const btn3secEl = document.getElementById('ux-btn-3sec');
     if (btn3secEl) {
@@ -313,6 +343,11 @@
       <span class="vol-status-tag" id="wf-vol-tag">음성 대기 중</span>
     `;
     statusPanel.insertAdjacentElement('afterend', wfWidget);
+    const liveSub = document.createElement('div');
+    liveSub.id = 'live-stt-preview';
+    liveSub.style.cssText = 'display:none; background:#eff6ff; border:1px solid #93c5fd; color:#1e3a8a; padding:10px 14px; border-radius:8px; margin-bottom:16px; font-size:13px; line-height:1.5;';
+    liveSub.innerHTML = '<b>🗣️ 실시간 인식 중인 내 발화:</b> <span id="live-stt-text" style="color:#0f172a; font-weight:600;">말씀하시면 여기에 실시간으로 영어 문장이 표시됩니다...</span>';
+    wfWidget.insertAdjacentElement('afterend', liveSub);
 
     // getUserMedia 후킹하여 마이크 활성화 시 자동으로 실시간 스펙트럼 파형 구동
     const origGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);

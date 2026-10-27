@@ -304,35 +304,51 @@
 
     async function initAudioAndSTT() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
-      mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        audioPlayer.src = URL.createObjectURL(audioBlob);
+      mediaRecorder = PTE_AUDIO.createCompatibleMediaRecorder(stream, (audioUrl) => {
+        audioPlayer.src = audioUrl;
         audioPlayer.style.display = 'block';
-      };
+        const studioAudio = document.getElementById('studio-user-audio');
+        if (studioAudio) studioAudio.src = audioUrl;
+      });
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.lang = "en-US";
         recognition.continuous = true;
-        recognition.interimResults = false;
+        recognition.interimResults = true;
 
         spokenTranscript = "";
+        let finalizedTranscript = "";
         confidenceSum = 0;
         confidenceCount = 0;
 
         recognition.onresult = (event) => {
+          let interimTranscript = "";
           for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const chunk = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              spokenTranscript += " " + event.results[i][0].transcript;
+              finalizedTranscript += " " + chunk;
               if (event.results[i][0].confidence) {
                 confidenceSum += event.results[i][0].confidence;
                 confidenceCount++;
               }
+            } else {
+              interimTranscript += " " + chunk;
             }
+          }
+          spokenTranscript = (finalizedTranscript + " " + interimTranscript).trim();
+          const liveBox = document.getElementById('live-stt-preview');
+          const liveTxt = document.getElementById('live-stt-text');
+          if (liveBox && liveTxt) {
+            liveBox.style.display = 'block';
+            liveTxt.innerText = spokenTranscript || '음성 분석 중...';
+          }
+        };
+
+        recognition.onend = () => {
+          if (mediaRecorder && mediaRecorder.state === "recording") {
+            try { recognition.start(); } catch (e) {}
           }
         };
       }
@@ -382,6 +398,9 @@
 
       recordingStartTime = Date.now();
       mediaRecorder.start();
+      const liveBox = document.getElementById('live-stt-preview');
+      const liveTxt = document.getElementById('live-stt-text');
+      if (liveBox && liveTxt) { liveBox.style.display = 'block'; liveTxt.innerText = '🎙️ 지금 영어로 말씀하시면 실시간 인식 문장이 여기에 표시됩니다...'; }
       if (recognition) { try { recognition.start(); } catch(e){} }
 
       let elapsed = 0;
@@ -471,6 +490,9 @@
 
       templateBox.innerHTML = `💡 <b>모범 고득점 템플릿:</b><br>${p.template}`;
       scoreCard.style.display = 'block';
+      if (typeof window.renderVoiceComparisonStudio === 'function') {
+        window.renderVoiceComparisonStudio(currentItem.modelAnswer || currentItem.title, spokenTranscript);
+      }
       setTimeout(() => qBar.refreshOptions(), 100);
 
       savePteResult({

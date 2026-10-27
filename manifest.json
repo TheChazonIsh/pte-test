@@ -1,9 +1,9 @@
 {
-  "name": "PTE Master AI Practice",
+  "name": "PTE Master AI v11.0 Practice",
   "short_name": "PTE Master",
-  "description": "PTE Speaking, Writing, Reading, Listening AI Simulator",
+  "description": "PTE Speaking, Writing, Reading, Listening AI Simulator (v11.0 Mobile Mic & Voice Compare Edition)",
   "start_url": "main.html",
-  "display": "standalone",
+  "display": "minimal-ui",
   "background_color": "#f8fafc",
   "theme_color": "#1e3a8a",
   "orientation": "portrait",

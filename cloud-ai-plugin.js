@@ -110,6 +110,81 @@
     }
     body.dark-mode .cloud-guide-box { background: #0f172a; border-color: #1d4ed8; color: #93c5fd; }
 
+    .voice-studio-panel {
+      margin-top: 16px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+      border: 2px solid #3b82f6;
+      border-radius: 12px;
+      padding: 18px;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+    body.dark-mode .voice-studio-panel {
+      background: #0f172a;
+      border-color: #2563eb;
+      color: #f8fafc;
+    }
+    .vs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 640px) {
+      .vs-grid { grid-template-columns: 1fr; }
+    }
+    .vs-box {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    body.dark-mode .vs-box {
+      background: #1e293b;
+      border-color: #334155;
+    }
+    .vs-btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .vs-btn {
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #1e293b;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .vs-btn:hover { background: #e2e8f0; }
+    .vs-btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    .vs-btn-primary:hover { background: #1d4ed8; }
+    .vs-btn-green {
+      background: #059669;
+      color: #ffffff;
+      border-color: #059669;
+    }
+    .vs-btn-green:hover { background: #047857; }
+    .vs-btn-purple {
+      background: #7c3aed;
+      color: #ffffff;
+      border-color: #7c3aed;
+      width: 100%;
+      padding: 11px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .vs-btn-purple:hover { background: #6d28d9; }
+
     .precision-panel {
       margin-top: 16px;
       background: #f8fafc;
@@ -347,10 +422,149 @@
     btn.className = 'ux-btn' + (isCloudActive ? ' active' : '');
   }
 
+  // Side-by-Side Voice Comparison & Shadowing Studio (v11.0 Proposal 1 Core Feature)
+  window.renderVoiceComparisonStudio = function(referenceText, spokenText) {
+    const scoreCard = document.getElementById('score-card');
+    if (!scoreCard) return;
+
+    const audioPlayer = document.getElementById('audio-player');
+    if (audioPlayer) {
+      audioPlayer.style.display = 'none'; // Integrated cleanly inside the studio card
+    }
+
+    let studio = document.getElementById('voice-compare-studio');
+    if (!studio) {
+      studio = document.createElement('div');
+      studio.id = 'voice-compare-studio';
+      studio.className = 'voice-studio-panel';
+      scoreCard.insertBefore(studio, scoreCard.firstChild);
+    }
+
+    const cleanRef = (referenceText || '').replace(/'/g, "\\'").replace(/\n/g, ' ').trim();
+    const recUrl = (audioPlayer && audioPlayer.src) ? audioPlayer.src : (typeof PTE_AUDIO !== 'undefined' ? PTE_AUDIO.lastRecordedBlobUrl : '');
+    const ext = (typeof PTE_AUDIO !== 'undefined' && PTE_AUDIO.lastRecordedMimeType && PTE_AUDIO.lastRecordedMimeType.includes('mp4')) ? 'm4a' : 'webm';
+
+    // Find missed words for instant practice
+    const refWords = (referenceText || '').split(/\s+/).filter(w => w.length > 0);
+    const spokenSet = new Set((spokenText || '').toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').split(/\s+/));
+    const missedWords = [];
+    const seen = new Set();
+    refWords.forEach(w => {
+      const clean = w.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+      const lower = clean.toLowerCase();
+      if (clean.length >= 3 && !spokenSet.has(lower) && !seen.has(lower)) {
+        seen.add(lower);
+        missedWords.push(clean);
+      }
+    });
+
+    const missedChips = missedWords.slice(0, 10).map(w =>
+      `<button type="button" class="vs-btn" style="border-color:#fca5a5; background:#fef2f2; color:#dc2626;" onclick="PTE_AUDIO.speak('${w.replace(/'/g, '')}', null, 0.85)">🔊 ${w}</button>`
+    ).join('');
+
+    studio.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <span style="background:#2563eb; color:white; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">v11.0 NEW</span>
+          <b style="font-size:15px; color:#1e3a8a; margin-left:6px;">🎧 내 녹음 목소리 vs 🔊 원어민 발음 1:1 비교 스튜디오</b>
+        </div>
+        <span style="font-size:11px; color:#059669; font-weight:700;">✔ 아이폰(Safari) · 안드로이드 · PC 완벽 호환</span>
+      </div>
+
+      <div class="vs-grid">
+        <div class="vs-box">
+          <div style="font-weight:800; color:#047857; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+            <span>🎙️ 1. 방금 녹음한 내 목소리</span>
+            ${recUrl ? `<a href="${recUrl}" download="my-pte-speaking.${ext}" style="font-size:11px; color:#2563eb; text-decoration:none; font-weight:700;">💾 녹음 저장</a>` : ''}
+          </div>
+          <audio id="studio-user-audio" controls preload="metadata" src="${recUrl || ''}" style="width:100%; height:36px; margin-bottom:6px;"></audio>
+          <div class="vs-btn-row">
+            <button type="button" class="vs-btn vs-btn-green" onclick="window.playStudioUserAudio(1.0)">▶️ 정속 재생 (1.0x)</button>
+            <button type="button" class="vs-btn" onclick="window.playStudioUserAudio(0.8)">🐢 느리게 확인 (0.8x)</button>
+            <button type="button" class="vs-btn" onclick="window.playStudioUserAudio(1.2)">⚡ 빠르게 (1.2x)</button>
+          </div>
+        </div>
+
+        <div class="vs-box">
+          <div style="font-weight:800; color:#1d4ed8; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+            <span>🔊 2. 원어민 표준 모범 발음</span>
+            <span style="font-size:11px; color:#64748b;">억양 선택 가능</span>
+          </div>
+          <div class="vs-btn-row" style="margin-bottom:8px;">
+            <button type="button" class="vs-btn" onclick="PTE_AUDIO.setAccent('en-US'); PTE_AUDIO.speak('${cleanRef}', null, 0.95)">🇺🇸 미국 원어민</button>
+            <button type="button" class="vs-btn" onclick="PTE_AUDIO.setAccent('en-GB'); PTE_AUDIO.speak('${cleanRef}', null, 0.95)">🇬🇧 영국 원어민</button>
+            <button type="button" class="vs-btn" onclick="PTE_AUDIO.setAccent('en-AU'); PTE_AUDIO.speak('${cleanRef}', null, 0.95)">🇦🇺 호주 원어민</button>
+          </div>
+          <div class="vs-btn-row">
+            <button type="button" class="vs-btn vs-btn-primary" onclick="PTE_AUDIO.speak('${cleanRef}', null, 0.95)">▶️ 실전 속도 듣기 (0.95x)</button>
+            <button type="button" class="vs-btn" onclick="PTE_AUDIO.speak('${cleanRef}', null, 0.8)">🐢 천천히 끊어 듣기 (0.8x)</button>
+            <button type="button" class="vs-btn" onclick="PTE_AUDIO.stopSpeak()">⏹️ 정지</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="vs-btn vs-btn-purple" id="btn-seq-compare" onclick="window.runSequentialVoiceCompare('${cleanRef}')">
+        🔄 [1:1 연속 비교] 원어민 모범 발음 먼저 듣고 ➔ 내 녹음 목소리 자동 이어 듣기
+      </button>
+
+      ${missedWords.length > 0 ? `
+        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+          <div style="font-size:12px; font-weight:700; color:#dc2626; margin-bottom:6px;">
+            🎯 놓쳤거나 발음이 흔들린 단어 집중 교정 (터치하면 원어민 발음이 재생됩니다):
+          </div>
+          <div class="vs-btn-row">${missedChips}</div>
+        </div>
+      ` : `
+        <div style="margin-top:10px; font-size:12px; color:#059669; font-weight:700;">
+          🎉 모든 핵심 단어가 누락 없이 정확하게 인식되었습니다!
+        </div>
+      `}
+    `;
+  };
+
+  window.playStudioUserAudio = function(rate = 1.0) {
+    if (typeof PTE_AUDIO !== 'undefined') PTE_AUDIO.stopSpeak();
+    const el = document.getElementById('studio-user-audio') || document.getElementById('audio-player');
+    if (!el || !el.src) {
+      alert('아직 녹음된 오디오가 없습니다. 먼저 문제를 녹음해 주세요!');
+      return;
+    }
+    el.playbackRate = rate;
+    el.currentTime = 0;
+    el.play().catch(() => {
+      alert('오디오 재생을 위해 플레이어의 재생(▶) 버튼을 직접 터치해 주세요.');
+    });
+  };
+
+  window.runSequentialVoiceCompare = function(nativeText) {
+    const btn = document.getElementById('btn-seq-compare');
+    const el = document.getElementById('studio-user-audio') || document.getElementById('audio-player');
+    if (btn) btn.innerText = '🔊 [1/2단계] 원어민 모범 발음 재생 중... 귀 기울여 들어보세요!';
+    PTE_AUDIO.speak(nativeText, () => {
+      if (el && el.src) {
+        if (btn) btn.innerText = '🎙️ [2/2단계] 방금 녹음한 내 목소리 재생 중... 억양과 속도를 비교하세요!';
+        el.playbackRate = 1.0;
+        el.currentTime = 0;
+        el.play().then(() => {
+          el.onended = () => {
+            if (btn) btn.innerText = '🔄 [1:1 연속 비교] 원어민 모범 발음 먼저 듣고 ➔ 내 녹음 목소리 자동 이어 듣기';
+          };
+        }).catch(() => {
+          if (btn) btn.innerText = '🔄 [1:1 연속 비교] 원어민 모범 발음 먼저 듣고 ➔ 내 녹음 목소리 자동 이어 듣기';
+        });
+      } else {
+        if (btn) btn.innerText = '🔄 [1:1 연속 비교] 원어민 모범 발음 먼저 듣고 ➔ 내 녹음 목소리 자동 이어 듣기';
+      }
+    }, 0.95);
+  };
+
   // Built-in Syllable Stress & Phonetic Complexity Diagnostic (100% Free Local Engine)
   function renderSyllableDiagnosticPanel(referenceText, spokenText) {
     const scoreCard = document.getElementById('score-card');
     if (!scoreCard) return;
+    if (typeof window.renderVoiceComparisonStudio === 'function') {
+      window.renderVoiceComparisonStudio(referenceText, spokenText);
+    }
 
     let panel = document.getElementById('syllable-stress-panel');
     if (!panel) {
