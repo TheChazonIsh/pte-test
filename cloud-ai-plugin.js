@@ -235,7 +235,7 @@
             <div class="cloud-guide-box">
               <b>💡 GitHub Gist 클라우드 동기화 (PC ↔ 스마트폰 1초 연동 · 100% 무료):</b><br>
               1. GitHub 우측 상단 프로필 ➔ <b>Settings</b> ➔ 좌측 맨 아래 <b>Developer settings</b> ➔ <b>Personal access tokens (Tokens classic)</b><br>
-              2. <b>Generate new token</b> 클릭 ➔ 권한에서 <b>[✔ gist]</b> 하나만 체크 후 생성된 토큰(`ghp_...`)을 아래에 입력!<br>
+              2. <b>Generate new token</b> 클릭 ➔ 권한에서 <b>[✔ gist]</b> 하나만 체크 후 생성된 토큰(&apos;ghp_...&apos;)을 아래에 입력!<br>
               3. 이제 PC에서 푼 점수와 오답 노트가 스마트폰에서도 버튼 하나로 즉시 동기화됩니다.
             </div>
             <div class="cloud-field">

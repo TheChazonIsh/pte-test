@@ -1,14 +1,17 @@
 /**
- * PTE Master Multi-Accent & Universal Mobile Recording Audio Engine (v11.0)
+ * PTE Master Multi-Accent & Universal Mobile Recording Audio Engine (v11.6 iOS & Earphone Robust Edition)
  * 1. US(미국), UK(영국), AU(호주) 원어민 발음 및 속도 제어
- * 2. iOS Safari(audio/mp4) & Android/PC(audio/webm) 자동 호환 녹음기 생성
- * 3. 원어민 발음 vs 내 녹음 목소리 1:1 연속 비교 재생기
+ * 2. iOS Safari SpeechSynthesis GC(가비지 컬렉션) 버그 및 무한 멈춤(Hang) 방지 자동 타이머 탑재
+ * 3. iOS Safari(audio/mp4) & Android/PC(audio/webm) 자동 호환 녹음기 생성
+ * 4. 원어민 발음 vs 내 녹음 목소리 1:1 연속 비교 재생기
  */
 
 const PTE_AUDIO = {
   currentAccent: localStorage.getItem('pte_preferred_accent') || 'en-US',
   lastRecordedBlobUrl: null,
   lastRecordedMimeType: 'audio/mp4',
+  activeUtterance: null, // iOS 가비지 컬렉션으로 인한 음성 중단 방지 참조 보존
+  safetyTimer: null,
 
   accents: {
     'en-US': { label: '🇺🇸 US (미국)', lang: 'en-US' },
@@ -25,7 +28,7 @@ const PTE_AUDIO = {
 
   getVoice() {
     if (!window.speechSynthesis) return null;
-    const voices = window.speechSynthesis.getVoices();
+    const voices = window.speechSynthesis.getVoices() || [];
     const targetLang = this.currentAccent;
     let match = voices.find(v => v.lang === targetLang || v.lang.replace('_', '-') === targetLang);
     if (!match) {
@@ -39,11 +42,28 @@ const PTE_AUDIO = {
   },
 
   speak(text, onEndCallback, rate = 0.95) {
+    if (!text || typeof text !== 'string') {
+      if (onEndCallback) onEndCallback();
+      return;
+    }
+
     if (!window.speechSynthesis) {
       if (onEndCallback) onEndCallback();
       return;
     }
-    window.speechSynthesis.cancel();
+
+    // iOS 사파리 멈춤 방지: 이전 음성 및 안전 타이머 취소 후 강제 resume
+    if (this.safetyTimer) {
+      clearTimeout(this.safetyTimer);
+      this.safetyTimer = null;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    } catch (e) {}
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = this.currentAccent;
     utterance.rate = rate;
@@ -51,16 +71,57 @@ const PTE_AUDIO = {
     const voice = this.getVoice();
     if (voice) utterance.voice = voice;
 
-    if (onEndCallback) utterance.onend = onEndCallback;
-    utterance.onerror = () => {
+    let hasEnded = false;
+    const finish = () => {
+      if (hasEnded) return;
+      hasEnded = true;
+      if (this.safetyTimer) {
+        clearTimeout(this.safetyTimer);
+        this.safetyTimer = null;
+      }
+      this.activeUtterance = null;
       if (onEndCallback) onEndCallback();
     };
-    window.speechSynthesis.speak(utterance);
+
+    utterance.onend = finish;
+    utterance.onerror = (e) => {
+      console.warn("SpeechSynthesis error:", e);
+      finish();
+    };
+
+    // [핵심 안전장치] iOS 사파리가 블루투스 이어폰 연결, 무음 모드 등으로 음성 이벤트를 먹통으로 만들었을 때
+    // 글자 수 기반 예상 시간(단어당 약 0.35초 + 여유 1.5초)이 지나면 무한 로딩에 갇히지 않고 무조건 다음 단계(녹음)로 자동 탈출!
+    const wordCount = text.trim().split(/\s+/).length;
+    const expectedMs = Math.max(3500, Math.round((wordCount / (rate * 2.2)) * 1000) + 1500);
+    this.safetyTimer = setTimeout(() => {
+      if (!hasEnded) {
+        console.warn("Safety timer triggered: Speech synthesis took too long or was muted by OS.");
+        finish();
+      }
+    }, expectedMs);
+
+    this.activeUtterance = utterance;
+
+    try {
+      window.speechSynthesis.speak(utterance);
+      // 사파리 특유의 큐 잠김 해제
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    } catch (err) {
+      console.error("speak call failed:", err);
+      finish();
+    }
   },
 
   stopSpeak() {
+    if (this.safetyTimer) {
+      clearTimeout(this.safetyTimer);
+      this.safetyTimer = null;
+    }
+    this.activeUtterance = null;
     if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+      try { window.speechSynthesis.cancel(); } catch (e) {}
     }
   },
 

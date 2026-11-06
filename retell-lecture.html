@@ -343,18 +343,36 @@
       }
     }
 
-    startBtn.addEventListener('click', async () => {
-      try {
-        await initAudioAndSTT();
-      } catch (err) {
-        alert("마이크 사용 권한을 허용해야 채점이 진행됩니다.");
-        return;
+    let currentStream = null;
+    async function preWarmMicrophone() {
+      if (!currentStream) {
+        try {
+          currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          if (!mediaRecorder) {
+            mediaRecorder = PTE_AUDIO.createCompatibleMediaRecorder(currentStream, (audioUrl) => {
+              audioPlayer.src = audioUrl;
+              audioPlayer.style.display = 'block';
+              const studioAudio = document.getElementById('studio-user-audio');
+              if (studioAudio) studioAudio.src = audioUrl;
+            });
+          }
+        } catch (e) {
+          console.warn("Mic prewarm skipped:", e);
+        }
+      }
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
       }
 
       startBtn.disabled = true;
       audioIcon.innerText = "🔊";
       audioDesc.innerText = `강의 재생 중... ("${currentItem.title}") 핵심 키워드를 메모하세요.`;
       statusLabel.innerText = "상태: 강의 청취 중 (Playing...)";
+
+      preWarmMicrophone();
 
       PTE_AUDIO.speak(currentItem.lecture, () => {
         startPreparation();
